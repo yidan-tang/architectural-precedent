@@ -1,0 +1,1919 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>松阳·陈家铺乡村文化驿站 — 前期案例研究</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Serif+SC:wght@300;400;500&family=Noto+Sans+SC:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF;
+    --paper:#FAFAFA;
+    --ink:#141414;
+    --ink-2:#4A4A48;
+    --ink-3:#8B8A8A;
+    --rule:#DDDDDD;
+    --rule-soft:#EEEEEE;
+    --accent:#B84A2F;
+    --placeholder-a:#CCCCCC;
+    --placeholder-b:#B8B8B8;
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;width:100%}
+  body{
+    font-family:'Inter','Noto Sans SC',-apple-system,BlinkMacSystemFont,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    overflow:hidden;
+    font-weight:300;
+    letter-spacing:0.005em;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;font-weight:400}
+  .serif{font-family:'Noto Serif SC',serif}
+
+  /* ---------------- DECK + PAGES ---------------- */
+  .deck{
+    position:relative;
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+  }
+
+  .page{
+    position:absolute;
+    inset:0;
+    padding:4.5vh 5.5vw;
+    display:none;
+    flex-direction:column;
+    background:var(--bg);
+  }
+  .page.active{
+    display:flex;
+    animation:fadeIn 0.55s cubic-bezier(.2,.7,.2,1) both;
+  }
+  @keyframes fadeIn{
+    0%{opacity:0;transform:translateY(10px)}
+    100%{opacity:1;transform:translateY(0)}
+  }
+
+  /* Top + bottom bars (universal) */
+  .top-bar, .bottom-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+  }
+  .top-bar{padding-bottom:1.2vh;border-bottom:1px solid var(--rule)}
+  .bottom-bar{padding-top:1.2vh;border-top:1px solid var(--rule);margin-top:auto}
+
+  .bottom-bar .num-now{color:var(--ink)}
+  .bottom-bar .accent-dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-right:8px;vertical-align:middle}
+
+  /* ---------------- COVER ---------------- */
+  .cover-body{
+    flex:1;
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+    padding:5vh 0 3vh 0;
+  }
+
+  .cover-meta{
+    display:grid;
+    grid-template-columns:repeat(4,max-content);
+    gap:4vw;
+    padding-bottom:4vh;
+  }
+  .meta-block{display:flex;flex-direction:column;gap:6px}
+  .meta-block .label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+  }
+  .meta-block .value{
+    font-size:14px;
+    font-weight:400;
+    color:var(--ink);
+    letter-spacing:0.02em;
+  }
+
+  .cover-center{
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .cover-kicker{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:2vh;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .cover-kicker::before{
+    content:"";
+    display:inline-block;
+    width:28px;
+    height:1px;
+    background:var(--accent);
+  }
+
+  .cover-title{
+    font-family:'Noto Sans SC','Inter',sans-serif;
+    font-weight:300;
+    font-size:clamp(44px,6.6vw,108px);
+    line-height:1.02;
+    letter-spacing:-0.015em;
+    color:var(--ink);
+    margin-bottom:2.4vh;
+  }
+  .cover-title .slash{color:var(--accent);font-weight:200;margin:0 0.25em}
+  .cover-en{
+    font-family:'Inter',sans-serif;
+    font-weight:200;
+    font-size:clamp(18px,1.6vw,26px);
+    letter-spacing:0.04em;
+    color:var(--ink-2);
+    max-width:60%;
+    line-height:1.25;
+  }
+
+  .cover-footer-grid{
+    display:grid;
+    grid-template-columns:1.2fr 1fr 1fr;
+    gap:4vw;
+    border-top:1px solid var(--rule);
+    padding-top:3vh;
+  }
+  .cover-col .col-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    display:block;
+    margin-bottom:1.4vh;
+  }
+  .cover-col p{
+    font-size:13px;
+    line-height:1.75;
+    color:var(--ink-2);
+    font-weight:300;
+  }
+  .cover-col ul, .cover-col ol{
+    list-style:none;
+    padding:0;
+  }
+  .cover-col ul li, .cover-col ol li{
+    font-size:12.5px;
+    line-height:1.9;
+    color:var(--ink-2);
+    font-weight:300;
+    position:relative;
+    padding-left:22px;
+  }
+  .cover-col ul li::before{
+    content:"—";
+    position:absolute;
+    left:0;
+    color:var(--ink-3);
+    font-weight:300;
+  }
+  .cover-col ol{counter-reset:clist}
+  .cover-col ol li{counter-increment:clist}
+  .cover-col ol li::before{
+    content:counter(clist,decimal-leading-zero);
+    position:absolute;
+    left:0;
+    color:var(--accent);
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    top:3px;
+    letter-spacing:0.05em;
+  }
+
+  /* ---------------- CASE PAGE (image-first layout) ---------------- */
+  .case-head{
+    position:relative;
+    z-index:6;
+    padding:2.4vh 3vw 0 3vw;
+    border-bottom:none;
+    pointer-events:none;
+  }
+  .case-head-row1{
+    display:flex;
+    align-items:baseline;
+    gap:1.4vw;
+    flex-wrap:wrap;
+  }
+  .case-num-mini{
+    font-family:'JetBrains Mono',monospace;
+    font-size:clamp(11px,0.95vw,14px);
+    font-weight:400;
+    color:var(--accent);
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+  }
+  .case-title-cn{
+    font-family:'Noto Sans SC',sans-serif;
+    font-weight:400;
+    font-size:clamp(20px,2vw,30px);
+    letter-spacing:0.01em;
+    line-height:1.05;
+    color:var(--ink);
+    margin:0;
+  }
+  .case-typology{
+    margin-left:auto;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--ink-3);
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+  }
+  .case-head-row2{
+    display:flex;
+    align-items:baseline;
+    gap:14px;
+    margin-top:8px;
+    font-family:'Inter',sans-serif;
+    color:var(--ink-3);
+  }
+  .case-title-en{
+    font-size:clamp(11px,0.92vw,14px);
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+  }
+  .case-credit{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--ink-2);
+    letter-spacing:0.04em;
+  }
+  .case-credit::before{
+    content:"·";
+    margin:0 12px 0 0;
+    color:var(--ink-3);
+  }
+
+  .case-stage{
+    flex:1;
+    position:relative;
+    margin:0 -3vw;
+    min-height:0;
+    z-index:60;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  .case-stage .case-image{
+    position:absolute;
+    inset:0;
+    z-index:1;
+    flex:initial;
+  }
+  .case-stage .case-head{
+    flex:0 0 auto;
+  }
+
+  /* Photo mode: invert case-head text on dark photos */
+  .case-head .case-title-cn,
+  .case-head .case-title-en,
+  .case-head .case-typology,
+  .case-head .case-credit{
+    transition:color 0.4s ease;
+  }
+  .case-stage.photo-mode .case-title-cn{color:rgba(255,255,255,0.96)}
+  .case-stage.photo-mode .case-title-en,
+  .case-stage.photo-mode .case-typology{color:rgba(255,255,255,0.7)}
+  .case-stage.photo-mode .case-credit{color:rgba(255,255,255,0.78)}
+  .case-stage.photo-mode .case-credit::before{color:rgba(255,255,255,0.4)}
+
+  .case-caption{
+    border-top:1px solid var(--rule);
+    padding:1.8vh 0 0.4vh 0;
+    display:grid;
+    grid-template-columns:1.45fr 1fr;
+    gap:3vw;
+    align-items:start;
+    min-height:14vh;
+  }
+  .caption-main, .caption-rel{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .caption-main{
+    transition:opacity 0.28s ease;
+  }
+  .caption-main.fading{opacity:0.12}
+  .caption-main .c-label,
+  .caption-rel .c-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .caption-main .c-label::before,
+  .caption-rel .c-label::before{
+    content:"";
+    display:inline-block;
+    width:14px;
+    height:1px;
+    background:var(--ink-3);
+  }
+  .caption-rel .c-label{color:var(--accent)}
+  .caption-rel .c-label::before{background:var(--accent)}
+  .caption-main p,
+  .caption-rel p{
+    font-size:13.5px;
+    line-height:1.75;
+    color:var(--ink);
+    font-weight:300;
+    margin:0;
+  }
+  .caption-rel p{color:var(--ink-2)}
+  .case-image{
+    position:relative;
+    overflow:hidden;
+    min-height:0;
+    background:#2A2826;
+  }
+
+  /* ---- Carousel filmstrip ---- */
+  .slides-track{
+    position:absolute;
+    inset:0;
+    display:flex;
+    transform:translate3d(0,0,0);
+    transition:transform 0.5s cubic-bezier(.32,0,.2,1);
+    will-change:transform;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:pan-y;
+  }
+  .slides-track.dragging{transition:none}
+  .slide{
+    position:relative;
+    flex:0 0 100%;
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:
+      linear-gradient(135deg, var(--placeholder-a) 0%, var(--placeholder-b) 100%);
+  }
+  .slide::before{
+    content:"";
+    position:absolute;inset:0;
+    background-image:
+      repeating-linear-gradient(45deg,
+        rgba(255,255,255,0.04) 0,
+        rgba(255,255,255,0.04) 1px,
+        transparent 1px,
+        transparent 14px);
+    pointer-events:none;
+  }
+  .slide img{
+    position:absolute;
+    inset:0;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+    display:block;
+  }
+  .slide.has-img{background:#1A1918}
+  .slide.has-img::before{display:none}
+  .slide.has-img .ph-center{display:none}
+  .slide-scrim{
+    position:absolute;
+    inset:0;
+    z-index:1;
+    pointer-events:none;
+    background:
+      linear-gradient(to bottom,
+        rgba(0,0,0,0.62) 0%,
+        rgba(0,0,0,0.28) 10%,
+        rgba(0,0,0,0) 22%,
+        rgba(0,0,0,0) 78%,
+        rgba(0,0,0,0.45) 100%);
+  }
+  .slide.fit-contain{background:#FFFFFF}
+  .slide.fit-contain img{object-fit:contain;padding:2%}
+  .slide.fit-contain .slide-scrim{
+    background:
+      linear-gradient(to bottom,
+        rgba(255,255,255,0.92) 0%,
+        rgba(255,255,255,0) 12%,
+        rgba(255,255,255,0) 86%,
+        rgba(255,255,255,0.85) 100%);
+  }
+  .slide.fit-contain .ph-code,
+  .slide.fit-contain .ph-caption{color:rgba(20,20,20,0.72)}
+
+  .slide .ph-code{
+    position:absolute;
+    top:5%;
+    left:5%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.22em;
+    color:rgba(255,255,255,0.85);
+    text-transform:uppercase;
+    z-index:2;
+  }
+  .slide .slide-counter{
+    position:absolute;
+    top:calc(5% + 20px);
+    left:5%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.2em;
+    color:rgba(255,255,255,0.55);
+    text-transform:uppercase;
+    z-index:2;
+  }
+  .slide .ph-tag{
+    position:absolute;
+    top:5%;
+    right:5%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    font-weight:500;
+    letter-spacing:0.3em;
+    color:rgba(255,255,255,0.95);
+    text-transform:uppercase;
+    z-index:2;
+  }
+  .slide.fit-contain .ph-tag{
+    color:rgba(20,20,20,0.8);
+    background:none;
+    border:none;
+  }
+  .slide .ph-center{
+    position:absolute;
+    inset:0;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    padding:5%;
+    z-index:2;
+  }
+  .slide .ph-cn{
+    font-family:'Noto Serif SC',serif;
+    font-weight:400;
+    font-size:clamp(20px,2vw,30px);
+    color:rgba(255,255,255,0.88);
+    letter-spacing:0.08em;
+    margin-bottom:8px;
+  }
+  .slide .ph-en{
+    font-family:'Inter',sans-serif;
+    font-weight:300;
+    font-size:clamp(11px,0.95vw,14px);
+    color:rgba(255,255,255,0.7);
+    letter-spacing:0.14em;
+    text-transform:uppercase;
+    margin-bottom:26px;
+  }
+  .slide .ph-big-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:clamp(15px,1.4vw,22px);
+    letter-spacing:0.42em;
+    color:rgba(255,255,255,0.9);
+    padding:11px 26px 11px 28px;
+    border-top:1px solid rgba(255,255,255,0.35);
+    border-bottom:1px solid rgba(255,255,255,0.35);
+  }
+  .slide .ph-caption{
+    position:absolute;
+    bottom:calc(5% + 34px);
+    left:5%;
+    right:5%;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.2em;
+    color:rgba(255,255,255,0.7);
+    text-transform:uppercase;
+    display:flex;
+    justify-content:space-between;
+    z-index:2;
+  }
+
+  /* ---- Carousel controls ---- */
+  .case-image{cursor:grab}
+  .case-image.is-dragging{cursor:grabbing}
+  .case-image.is-dragging *{cursor:grabbing !important}
+
+  .carousel-dots{
+    position:absolute;
+    bottom:18px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:5;
+    display:flex;
+    gap:10px;
+    padding:0;
+    background:transparent;
+    backdrop-filter:none;
+    -webkit-backdrop-filter:none;
+    border:none;
+  }
+  .c-dot{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:rgba(255,255,255,0.55);
+    cursor:pointer;
+    transition:all 0.3s ease;
+    box-shadow:0 0 6px rgba(0,0,0,0.35);
+  }
+  .c-dot.active{background:rgba(255,255,255,1);transform:scale(1.35)}
+  .c-dot:hover{background:rgba(255,255,255,0.85)}
+  .case-image:has(.slide.fit-contain.active) .c-dot{
+    background:rgba(20,20,20,0.35);
+    box-shadow:none;
+  }
+  .case-image:has(.slide.fit-contain.active) .c-dot.active{background:rgba(20,20,20,0.9)}
+
+  .case-meta{
+    display:flex;
+    flex-wrap:wrap;
+    gap:1.2vh 2.8vw;
+    margin-top:1.6vh;
+  }
+  .case-meta > div{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+  }
+  .case-meta .m-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    display:inline;
+    margin:0;
+  }
+  .case-meta .m-value{
+    font-size:12px;
+    color:var(--ink);
+    font-weight:400;
+    line-height:1.3;
+  }
+  .case-meta .m-value br{display:none}
+
+  .case-right{
+    display:flex;
+    flex-direction:column;
+    gap:2.8vh;
+    overflow:hidden;
+  }
+  .case-section{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+  }
+  .case-section .s-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .case-section .s-label::before{
+    content:"";
+    display:inline-block;
+    width:14px;
+    height:1px;
+    background:var(--ink-3);
+  }
+  .case-section.accent .s-label{color:var(--accent)}
+  .case-section.accent .s-label::before{background:var(--accent)}
+  .case-section .s-body{
+    font-size:13.5px;
+    line-height:1.75;
+    color:var(--ink);
+    font-weight:300;
+  }
+  .case-section .s-body strong{font-weight:500;color:var(--ink)}
+
+  /* ---------------- COMPARE PAGE ---------------- */
+  .compare-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding:3.4vh 0 2.4vh 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .compare-title{
+    font-family:'Noto Sans SC',sans-serif;
+    font-weight:300;
+    font-size:clamp(28px,3.2vw,48px);
+    letter-spacing:0.01em;
+    line-height:1.1;
+  }
+  .compare-title small{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    font-weight:400;
+    letter-spacing:0.22em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .compare-sub{
+    text-align:right;
+    font-size:12px;
+    line-height:1.7;
+    color:var(--ink-3);
+    max-width:40%;
+  }
+
+  .compare-table-wrap{
+    flex:1;
+    padding-top:3vh;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+  }
+  table.compare{
+    width:100%;
+    border-collapse:collapse;
+    font-size:13.5px;
+    line-height:1.65;
+  }
+  table.compare thead th{
+    text-align:left;
+    font-family:'JetBrains Mono',monospace;
+    font-weight:400;
+    font-size:10.5px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    padding:16px 14px;
+    border-bottom:1px solid var(--rule);
+    vertical-align:bottom;
+  }
+  table.compare tbody td{
+    padding:22px 14px;
+    border-bottom:1px solid var(--rule-soft);
+    vertical-align:top;
+    color:var(--ink-2);
+    font-weight:300;
+  }
+  table.compare tbody tr:last-child td{border-bottom:1px solid var(--rule)}
+  table.compare tbody tr:hover td{background:var(--paper)}
+
+  table.compare .idx{
+    font-family:'JetBrains Mono',monospace;
+    color:var(--accent);
+    font-size:13px;
+    letter-spacing:0.1em;
+    font-weight:400;
+  }
+  table.compare .thumb{
+    padding:18px 14px;
+  }
+  table.compare .thumb img{
+    display:block;
+    width:100%;
+    max-width:150px;
+    aspect-ratio:3/2;
+    object-fit:cover;
+  }
+  table.compare .proj-cn{
+    font-weight:500;
+    color:var(--ink);
+    font-size:15px;
+    display:block;
+    margin-bottom:4px;
+    letter-spacing:0.01em;
+  }
+  table.compare .proj-en{
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    color:var(--ink-3);
+    letter-spacing:0.1em;
+    text-transform:uppercase;
+    display:block;
+    margin-bottom:4px;
+  }
+  table.compare .proj-meta{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    color:var(--ink-3);
+    letter-spacing:0.06em;
+    display:block;
+  }
+  table.compare .highlight{color:var(--ink);font-weight:400}
+
+  /* ---------------- TAKEAWAY PAGE ---------------- */
+  .takeaway-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding:3.4vh 0 2.4vh 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .takeaway-title{
+    font-family:'Noto Sans SC',sans-serif;
+    font-weight:300;
+    font-size:clamp(28px,3.2vw,48px);
+    letter-spacing:0.01em;
+    line-height:1.08;
+  }
+  .takeaway-title small{
+    display:block;
+    font-family:'Inter',sans-serif;
+    font-size:11px;
+    font-weight:400;
+    letter-spacing:0.22em;
+    color:var(--accent);
+    text-transform:uppercase;
+    margin-bottom:10px;
+  }
+  .takeaway-sub{
+    text-align:right;
+    font-size:12px;
+    line-height:1.7;
+    color:var(--ink-3);
+    max-width:42%;
+  }
+
+  .takeaway-list{
+    flex:1;
+    padding-top:1.2vh;
+    display:flex;
+    flex-direction:column;
+    overflow:hidden;
+  }
+  .take-row{
+    display:grid;
+    grid-template-columns:14% 41% 41%;
+    gap:2.4vw;
+    padding:2vh 0;
+    border-bottom:1px solid var(--rule-soft);
+    align-items:start;
+  }
+  .take-row:last-child{border-bottom:none}
+  .take-meta{
+    display:flex;
+    flex-direction:column;
+    gap:10px;
+    padding-top:4px;
+  }
+  .take-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:clamp(22px,1.8vw,28px);
+    font-weight:300;
+    color:var(--accent);
+    letter-spacing:-0.01em;
+    line-height:1;
+  }
+  .take-label-cn{
+    font-family:'Noto Sans SC',sans-serif;
+    font-size:clamp(14px,1.1vw,17px);
+    font-weight:500;
+    color:var(--ink);
+    line-height:1.25;
+  }
+  .take-label-en{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+  }
+  .take-lesson, .take-direction{
+    display:flex;
+    flex-direction:column;
+    gap:9px;
+  }
+  .take-col-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:9.5px;
+    letter-spacing:0.28em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .take-col-label::before{
+    content:"";
+    display:inline-block;
+    width:14px;
+    height:1px;
+    background:var(--ink-3);
+  }
+  .take-direction .take-col-label{color:var(--accent)}
+  .take-direction .take-col-label::before{background:var(--accent)}
+  .take-lesson p, .take-direction p{
+    font-size:13px;
+    line-height:1.72;
+    color:var(--ink-2);
+    font-weight:300;
+    margin:0;
+  }
+  .take-direction p{color:var(--ink)}
+  .take-lesson p strong, .take-direction p strong{
+    font-weight:500;
+    color:var(--ink);
+  }
+
+  /* ---------------- TAKEAWAY PAGE (one-per-dimension) ---------------- */
+  .take-page-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding:3.8vh 0 3vh 0;
+    border-bottom:1px solid var(--rule);
+  }
+  .tph-left{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .tph-num{
+    font-family:'JetBrains Mono',monospace;
+    font-size:clamp(12px,1.05vw,15px);
+    font-weight:400;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--accent);
+  }
+  .tph-cn{
+    font-family:'Noto Sans SC',sans-serif;
+    font-weight:300;
+    font-size:clamp(52px,6.6vw,96px);
+    line-height:0.95;
+    color:var(--ink);
+    letter-spacing:-0.01em;
+    margin:0;
+  }
+  .tph-en{
+    font-family:'Inter',sans-serif;
+    font-weight:300;
+    font-size:clamp(14px,1.15vw,18px);
+    letter-spacing:0.16em;
+    color:var(--ink-3);
+    text-transform:uppercase;
+    margin-top:6px;
+  }
+  .tph-tag{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.26em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+  }
+
+  .take-page-body{
+    flex:1;
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5vw;
+    padding:4vh 0 3vh 0;
+    align-content:center;
+    min-height:0;
+  }
+  .tpb-col{
+    display:flex;
+    flex-direction:column;
+    gap:2.2vh;
+  }
+  .tpb-col.direction{
+    padding-left:3vw;
+    border-left:1px solid var(--rule-soft);
+  }
+  .tpb-label{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .tpb-label::before{
+    content:"";
+    display:inline-block;
+    width:22px;
+    height:1px;
+    background:var(--ink-3);
+  }
+  .tpb-col.direction .tpb-label{color:var(--accent)}
+  .tpb-col.direction .tpb-label::before{background:var(--accent)}
+  .tpb-col p{
+    font-size:clamp(18px,1.65vw,25px);
+    line-height:1.7;
+    color:var(--ink);
+    font-weight:300;
+    margin:0;
+  }
+  .tpb-col.lesson p{color:var(--ink-2)}
+  .tpb-col p strong{
+    font-weight:500;
+    color:var(--ink);
+  }
+
+  @media (max-width:900px){
+    .take-page-body{grid-template-columns:1fr;gap:3vh}
+    .tpb-col.direction{padding-left:0;border-left:none;padding-top:3vh;border-top:1px solid var(--rule-soft)}
+    .tph-cn{font-size:clamp(40px,8vw,60px)}
+  }
+
+  /* ---------------- PAGER (dots + hint) ---------------- */
+  .pager{
+    position:fixed;
+    right:5.5vw;
+    bottom:4.5vh;
+    display:flex;
+    gap:10px;
+    z-index:100;
+    pointer-events:none;
+  }
+  .dot{
+    width:6px;
+    height:6px;
+    border:1px solid var(--ink-3);
+    border-radius:50%;
+    transition:all 0.35s ease;
+  }
+  .dot.active{background:var(--accent);border-color:var(--accent);transform:scale(1.2)}
+
+  .hint{
+    position:fixed;
+    left:5.5vw;
+    bottom:4.5vh;
+    font-family:'JetBrains Mono',monospace;
+    font-size:9px;
+    letter-spacing:0.22em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    opacity:0.65;
+    z-index:100;
+    pointer-events:none;
+    transition:opacity 0.6s ease;
+  }
+  .hint.fade{opacity:0}
+
+  .click-zone{
+    position:fixed;
+    top:0;bottom:0;
+    width:35vw;
+    z-index:50;
+    cursor:pointer;
+  }
+  .click-zone.left{left:0}
+  .click-zone.right{right:0}
+  .click-zone::after{
+    content:"";
+    position:absolute;
+    top:50%;
+    width:20px;
+    height:20px;
+    transform:translateY(-50%);
+    opacity:0;
+    transition:opacity 0.3s ease;
+  }
+  .click-zone.left::after{
+    left:2.5vw;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B8A84' stroke-width='1.2'><path d='M15 6l-6 6 6 6'/></svg>") no-repeat center/contain;
+  }
+  .click-zone.right::after{
+    right:2.5vw;
+    background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238B8A84' stroke-width='1.2'><path d='M9 6l6 6-6 6'/></svg>") no-repeat center/contain;
+  }
+  .click-zone:hover::after{opacity:0.75}
+
+  /* ---------------- RESPONSIVE GUARDS ---------------- */
+  @media (max-width:900px){
+    .case-body, .cover-footer-grid{grid-template-columns:1fr}
+    .cover-meta{grid-template-columns:repeat(2,1fr)}
+    .case-meta{grid-template-columns:repeat(2,1fr);gap:1.2vh 2vw}
+    .case-header, .compare-head{flex-direction:column;align-items:flex-start;gap:12px}
+    .case-titles{text-align:left;max-width:100%}
+    .compare-sub{max-width:100%;text-align:left}
+  }
+
+  /* PRINT - PDF export friendly */
+  @media print{
+    body{background:#fff}
+    .pager, .hint, .click-zone{display:none}
+    .page{display:flex !important;page-break-after:always;position:relative;height:100vh}
+  }
+</style>
+</head>
+<body>
+
+<div class="deck" id="deck">
+
+  <!-- ============ PAGE 1 · COVER ============ -->
+  <section class="page cover active" data-idx="0">
+    <header class="top-bar">
+      <span>MOUNTAIN STUDIO · 山间建筑工作室</span>
+      <span>PRE-DESIGN · CASE STUDY / 2026.04</span>
+    </header>
+
+    <div class="cover-body">
+
+      <div class="cover-meta">
+        <div class="meta-block">
+          <span class="label">Project Nº</span>
+          <span class="value mono">MS—2604</span>
+        </div>
+        <div class="meta-block">
+          <span class="label">Location</span>
+          <span class="value">松阳 · 陈家铺</span>
+        </div>
+        <div class="meta-block">
+          <span class="label">Area</span>
+          <span class="value">1,500 ㎡</span>
+        </div>
+        <div class="meta-block">
+          <span class="label">Type</span>
+          <span class="value">Cultural · Rural</span>
+        </div>
+      </div>
+
+      <div class="cover-center">
+        <div class="cover-kicker">Case Study · 案例研究</div>
+        <h1 class="cover-title">
+          松阳<span class="slash">/</span>陈家铺<br>
+          乡村文化驿站
+        </h1>
+        <div class="cover-en">
+          Songyang · Chenjiapu<br>
+          Rural Cultural Station — Precedent Research
+        </div>
+      </div>
+
+      <div class="cover-footer-grid">
+        <div class="cover-col">
+          <span class="col-label">Brief Abstract · 任务书摘要</span>
+          <p>浙南松阳县四都乡陈家铺村，利用废弃村小学进行改造与扩建，整合阅览、展陈、多功能厅、村民活动、艺术家驻留五类功能。场地位于海拔 850m 山脊古村，面向梯田与晨雾。设计需在本地材料、成本约束与传统风貌之间，寻找一种克制的当代性。</p>
+        </div>
+        <div class="cover-col">
+          <span class="col-label">Key Requirements · 核心要求</span>
+          <ul>
+            <li>废弃村小学改造 + 扩建</li>
+            <li>1,500 ㎡ 公共文化综合体</li>
+            <li>山脊崖居古村 · 850m</li>
+            <li>本地石 / 木 / 夯土为主</li>
+            <li>成本 ≤ 3,500 元/㎡</li>
+            <li>公共性 · 在地性 · 轻度当代</li>
+          </ul>
+        </div>
+        <div class="cover-col">
+          <span class="col-label">Precedents · 研究对象</span>
+          <ol>
+            <li>篱苑书屋 / Li Xiaodong · 2011</li>
+            <li>平田农耕博物馆 / DnA · 2015</li>
+            <li>陈家铺平民书局 / AZL · 2018</li>
+            <li>先锋厦地水田书店 / TAO · 2019</li>
+          </ol>
+        </div>
+      </div>
+
+    </div>
+
+    <footer class="bottom-bar">
+      <span>Cover · 封面</span>
+      <span><span class="accent-dot"></span>01 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 2 · CASE 01 ============ -->
+  <section class="page" data-idx="1">
+    <header class="top-bar">
+      <span>Case Study 01 / 04 · 案例研究</span>
+      <span>Typology · Rural Library / 乡村图书馆</span>
+    </header>
+
+    <div class="case-stage">
+      <div class="case-image" data-case="1"></div>
+      <div class="case-head">
+        <div class="case-head-row1">
+          <span class="case-num-mini">— 01</span>
+          <h2 class="case-title-cn">篱苑书屋</h2>
+          <span class="case-typology">Rural Library · 乡村图书馆</span>
+        </div>
+        <div class="case-head-row2">
+          <span class="case-title-en">Liyuan Library</span>
+          <span class="case-credit">Li Xiaodong Atelier · 2011—12 · 170 ㎡ · 北京怀柔</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-caption" data-case="1"></div>
+
+    <footer class="bottom-bar">
+      <span>Precedent 01 — Liyuan Library</span>
+      <span><span class="accent-dot"></span>02 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 3 · CASE 02 ============ -->
+  <section class="page" data-idx="2">
+    <header class="top-bar">
+      <span>Case Study 02 / 04 · 案例研究</span>
+      <span>Typology · Adaptive Reuse / 适应性再利用</span>
+    </header>
+
+    <div class="case-stage">
+      <div class="case-image" data-case="2"></div>
+      <div class="case-head">
+        <div class="case-head-row1">
+          <span class="case-num-mini">— 02</span>
+          <h2 class="case-title-cn">平田农耕博物馆</h2>
+          <span class="case-typology">Adaptive Reuse · 适应性再利用</span>
+        </div>
+        <div class="case-head-row2">
+          <span class="case-title-en">Pingtian Agricultural Museum</span>
+          <span class="case-credit">DnA_徐甜甜 · 2015 · 307.7 ㎡ · 松阳平田村（同属松阳）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-caption" data-case="2"></div>
+
+    <footer class="bottom-bar">
+      <span>Precedent 02 — Pingtian Museum</span>
+      <span><span class="accent-dot"></span>03 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 4 · CASE 03 ============ -->
+  <section class="page" data-idx="3">
+    <header class="top-bar">
+      <span>Case Study 03 / 04 · 案例研究</span>
+      <span>Typology · Same Village / 同村先例 ◉</span>
+    </header>
+
+    <div class="case-stage">
+      <div class="case-image" data-case="3"></div>
+      <div class="case-head">
+        <div class="case-head-row1">
+          <span class="case-num-mini">— 03 ◉</span>
+          <h2 class="case-title-cn">陈家铺平民书局</h2>
+          <span class="case-typology" style="color:var(--accent)">Same Village · 同村先例</span>
+        </div>
+        <div class="case-head-row2">
+          <span class="case-title-en">Chenjiapu Civilian Bookstore</span>
+          <span class="case-credit">AZL · 张雷联合 · 2018 · 300 ㎡ · 松阳陈家铺村（本项目同村）</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-caption" data-case="3"></div>
+
+    <footer class="bottom-bar">
+      <span>Precedent 03 — Chenjiapu Bookstore · SAME VILLAGE</span>
+      <span><span class="accent-dot"></span>04 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 5 · CASE 04 ============ -->
+  <section class="page" data-idx="4">
+    <header class="top-bar">
+      <span>Case Study 04 / 04 · 案例研究</span>
+      <span>Typology · Ruin Container / 废墟容器</span>
+    </header>
+
+    <div class="case-stage">
+      <div class="case-image" data-case="4"></div>
+      <div class="case-head">
+        <div class="case-head-row1">
+          <span class="case-num-mini">— 04</span>
+          <h2 class="case-title-cn">先锋厦地水田书店</h2>
+          <span class="case-typology">Ruin Container · 废墟容器</span>
+        </div>
+        <div class="case-head-row2">
+          <span class="case-title-en">Xiadi Paddy Field Bookstore</span>
+          <span class="case-credit">TAO · 迹·建筑（华黎） · 2019 · 约 200 ㎡ · 福建屏南厦地古村</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="case-caption" data-case="4"></div>
+
+    <footer class="bottom-bar">
+      <span>Precedent 04 — Xiadi Paddy Bookstore</span>
+      <span><span class="accent-dot"></span>05 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 6 · COMPARISON ============ -->
+  <section class="page" data-idx="5">
+    <header class="top-bar">
+      <span>Comparative Analysis · 案例横向对比</span>
+      <span>Synthesis · 研究综述</span>
+    </header>
+
+    <div class="compare-head">
+      <div class="compare-title">
+        <small>— Comparative Matrix</small>
+        案例横向对比
+      </div>
+      <div class="compare-sub">
+        四个案例沿"外壳保留度 / 新结构介入强度 / 材料在地性"三条轴线展开，共同界定本项目的设计策略坐标。
+      </div>
+    </div>
+
+    <div class="compare-table-wrap">
+      <table class="compare">
+        <thead>
+          <tr>
+            <th style="width:4%">Nº</th>
+            <th style="width:13%">Image</th>
+            <th style="width:20%">Project</th>
+            <th style="width:8%">Scale</th>
+            <th style="width:17%">Site Strategy</th>
+            <th style="width:17%">Material & Structure</th>
+            <th style="width:21%">Relevance to Brief</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="idx">01</td>
+            <td class="thumb"><img src="https://images.adsttc.com/media/images/500b/285e/28ba/0d25/b900/0101/large_jpg/stringio.jpg?1414389363" alt="Liyuan Library" loading="lazy"></td>
+            <td>
+              <span class="proj-cn">篱苑书屋</span>
+              <span class="proj-en">Liyuan Library</span>
+              <span class="proj-meta">Li Xiaodong · 2011 · 北京</span>
+            </td>
+            <td>170 ㎡<br><span class="proj-meta">单体</span></td>
+            <td>独立盒体，消隐于山林</td>
+            <td><span class="highlight">本地柴薪</span>外壳 + 钢框架 + 玻璃幕墙</td>
+            <td>单一材料叙事；阅览阶梯空间的原型</td>
+          </tr>
+          <tr>
+            <td class="idx">02</td>
+            <td class="thumb"><img src="https://images.adsttc.com/media/images/5aeb/2d2b/f197/cc60/0900/0426/large_jpg/_DSC3676_HDR_(1).jpg?1525361949" alt="Pingtian Agricultural Museum" loading="lazy"></td>
+            <td>
+              <span class="proj-cn">平田农耕博物馆</span>
+              <span class="proj-en">Pingtian Agri-Museum</span>
+              <span class="proj-meta">DnA · 2015 · 松阳</span>
+            </td>
+            <td>307 ㎡<br><span class="proj-meta">院落群</span></td>
+            <td>保留院落 + 针灸式修复</td>
+            <td>原<span class="highlight">夯土 + 小青瓦</span>外壳，内部木梁柱加固</td>
+            <td>同县气候与工艺；改造逻辑可直接对接</td>
+          </tr>
+          <tr>
+            <td class="idx">03</td>
+            <td class="thumb"><img src="https://images.adsttc.com/media/images/5cc6/a409/284d/d134/5d00/0010/large_jpg/03_exterior_view.jpg?1556521985" alt="Chenjiapu Civilian Bookstore" loading="lazy"></td>
+            <td>
+              <span class="proj-cn">陈家铺平民书局 ◉</span>
+              <span class="proj-en">Chenjiapu Bookstore</span>
+              <span class="proj-meta">AZL · 2018 · <span class="highlight">同村</span></span>
+            </td>
+            <td>300 ㎡<br><span class="proj-meta">单体改造</span></td>
+            <td><span class="highlight">外壳完全保留</span>；内部多层置入</td>
+            <td>夯土外壳 + 木钢内核；木结构悬浮台地</td>
+            <td><span class="highlight">同村先例</span>——外壳 + 内部剧院模式</td>
+          </tr>
+          <tr>
+            <td class="idx">04</td>
+            <td class="thumb"><img src="https://images.adsttc.com/media/images/5e1c/5d03/3312/fd68/4500/0198/large_jpg/06_%E6%B0%B4%E7%94%B0%E4%B8%AD%E7%9A%84%E4%B9%A6%E5%BA%97_%C2%A9%E9%99%88%E9%A2%A2__The_bookstore_in_the_paddy_fields_%C2%A9CHEN_Hao.jpg?1578917116" alt="Xiadi Paddy Field Bookstore" loading="lazy"></td>
+            <td>
+              <span class="proj-cn">先锋厦地水田书店</span>
+              <span class="proj-en">Xiadi Paddy Bookstore</span>
+              <span class="proj-meta">TAO · 2019 · 福建</span>
+            </td>
+            <td>约 200 ㎡<br><span class="proj-meta">废墟改造</span></td>
+            <td>废墟容器；新结构藏于残墙</td>
+            <td>夯土残墙 + <span class="highlight">木纹混凝土</span> + 钢</td>
+            <td>当代材料的在地化表达；新建部分参照</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="bottom-bar">
+      <span>Synthesis · 综合对比</span>
+      <span><span class="accent-dot"></span>06 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 7 · TAKEAWAY 01 — SITE RESPONSE ============ -->
+  <section class="page" data-idx="6">
+    <header class="top-bar">
+      <span>Design Takeaway 01 / 05 · 设计指向</span>
+      <span>For Songyang · Chenjiapu Cultural Station</span>
+    </header>
+
+    <div class="take-page-head">
+      <div class="tph-left">
+        <span class="tph-num">— 01 · Design Direction</span>
+        <h2 class="tph-cn">场地回应</h2>
+        <span class="tph-en">Site Response</span>
+      </div>
+      <span class="tph-tag">Takeaway 01 / 05</span>
+    </div>
+
+    <div class="take-page-body">
+      <div class="tpb-col lesson">
+        <span class="tpb-label">Lesson · 案例启示</span>
+        <p>四个项目的共同态度——<strong>最小干预、最大在场</strong>。Liyuan 消解于山林、Chenjiapu 外壳完全保留、Xiadi 以残墙为容器、Pingtian 延续院落秩序。建筑不宣告自己，而是让场地继续说话。</p>
+      </div>
+      <div class="tpb-col direction">
+        <span class="tpb-label">Direction · 本项目指向</span>
+        <p>原村小学夯土主体 <strong>100% 保留</strong>。900 ㎡ 新建部分藏于场地后坡，从主街巷立面不可见；建筑的"正面"朝东，面对梯田与晨雾——把场地最珍贵的取景权交给空间。</p>
+      </div>
+    </div>
+
+    <footer class="bottom-bar">
+      <span>Takeaway 01 — Site Response</span>
+      <span><span class="accent-dot"></span>07 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 8 · TAKEAWAY 02 — FORMAL MOVE ============ -->
+  <section class="page" data-idx="7">
+    <header class="top-bar">
+      <span>Design Takeaway 02 / 05 · 设计指向</span>
+      <span>For Songyang · Chenjiapu Cultural Station</span>
+    </header>
+
+    <div class="take-page-head">
+      <div class="tph-left">
+        <span class="tph-num">— 02 · Design Direction</span>
+        <h2 class="tph-cn">形式操作</h2>
+        <span class="tph-en">Formal Move</span>
+      </div>
+      <span class="tph-tag">Takeaway 02 / 05</span>
+    </div>
+
+    <div class="take-page-body">
+      <div class="tpb-col lesson">
+        <span class="tpb-label">Lesson · 案例启示</span>
+        <p>"<strong>壳体 + 内核</strong>"是这一类乡村公共建筑的普遍策略——外形不动，内部重写。Chenjiapu 与 Xiadi 是最极端形态；体量始终保持坡顶木构民居的轮廓与尺度，不做当代"地标"。</p>
+      </div>
+      <div class="tpb-col direction">
+        <span class="tpb-label">Direction · 本项目指向</span>
+        <p>保留夯土双坡外壳与原尺度。新建部分以 <strong>2–3 个小体量群落</strong>沿坡地跌落接入，避免单一大体量破坏村落肌理；坡屋顶方向与邻近民居对齐。</p>
+      </div>
+    </div>
+
+    <footer class="bottom-bar">
+      <span>Takeaway 02 — Formal Move</span>
+      <span><span class="accent-dot"></span>08 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 9 · TAKEAWAY 03 — SPATIAL ATMOSPHERE ============ -->
+  <section class="page" data-idx="8">
+    <header class="top-bar">
+      <span>Design Takeaway 03 / 05 · 设计指向</span>
+      <span>For Songyang · Chenjiapu Cultural Station</span>
+    </header>
+
+    <div class="take-page-head">
+      <div class="tph-left">
+        <span class="tph-num">— 03 · Design Direction</span>
+        <h2 class="tph-cn">空间氛围</h2>
+        <span class="tph-en">Spatial Atmosphere</span>
+      </div>
+      <span class="tph-tag">Takeaway 03 / 05</span>
+    </div>
+
+    <div class="take-page-body">
+      <div class="tpb-col lesson">
+        <span class="tpb-label">Lesson · 案例启示</span>
+        <p><strong>外部克制换取内部戏剧性</strong>。Liyuan 的阶梯阅读剧场、Chenjiapu 的三层悬浮阁楼、Pingtian 的通高院落——都把叙事收进内部，让访客进入后才被打动。</p>
+      </div>
+      <div class="tpb-col direction">
+        <span class="tpb-label">Direction · 本项目指向</span>
+        <p>阅览厅借 Liyuan + Chenjiapu 的<strong>阶梯/台地</strong>语汇构成垂直阅读剧场；多功能厅借 Pingtian 的<strong>通高院落</strong>策略；艺术家工作室保持简朴，形成公共—私密的节奏对比。</p>
+      </div>
+    </div>
+
+    <footer class="bottom-bar">
+      <span>Takeaway 03 — Spatial Atmosphere</span>
+      <span><span class="accent-dot"></span>09 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 10 · TAKEAWAY 04 — MATERIAL LOGIC ============ -->
+  <section class="page" data-idx="9">
+    <header class="top-bar">
+      <span>Design Takeaway 04 / 05 · 设计指向</span>
+      <span>For Songyang · Chenjiapu Cultural Station</span>
+    </header>
+
+    <div class="take-page-head">
+      <div class="tph-left">
+        <span class="tph-num">— 04 · Design Direction</span>
+        <h2 class="tph-cn">材料逻辑</h2>
+        <span class="tph-en">Material Logic</span>
+      </div>
+      <span class="tph-tag">Takeaway 04 / 05</span>
+    </div>
+
+    <div class="take-page-body">
+      <div class="tpb-col lesson">
+        <span class="tpb-label">Lesson · 案例启示</span>
+        <p>本地材料不是装饰，是<strong>叙事主角</strong>。Liyuan 柴薪、Pingtian 夯土、Xiadi 木纹混凝土——当代材料也必须"说本地语言"，而不是贴一层假壳伪装。</p>
+      </div>
+      <div class="tpb-col direction">
+        <span class="tpb-label">Direction · 本项目指向</span>
+        <p>原夯土墙 100% 保留并修复。新建部分采用<strong>本地木构 + 碳化松木模板混凝土</strong>（参照 Xiadi）；石材仅用于基础与铺地——<strong>禁止装饰性石贴面</strong>。</p>
+      </div>
+    </div>
+
+    <footer class="bottom-bar">
+      <span>Takeaway 04 — Material Logic</span>
+      <span><span class="accent-dot"></span>10 / 11</span>
+    </footer>
+  </section>
+
+  <!-- ============ PAGE 11 · TAKEAWAY 05 — OPERATIONAL STRATEGY ============ -->
+  <section class="page" data-idx="10">
+    <header class="top-bar">
+      <span>Design Takeaway 05 / 05 · 设计指向</span>
+      <span>For Songyang · Chenjiapu Cultural Station</span>
+    </header>
+
+    <div class="take-page-head">
+      <div class="tph-left">
+        <span class="tph-num">— 05 · Design Direction</span>
+        <h2 class="tph-cn">运营策略</h2>
+        <span class="tph-en">Operational Strategy</span>
+      </div>
+      <span class="tph-tag">Takeaway 05 / 05</span>
+    </div>
+
+    <div class="take-page-body">
+      <div class="tpb-col lesson">
+        <span class="tpb-label">Lesson · 案例启示</span>
+        <p>Chenjiapu 已验证陈家铺村的<strong>村民 + 游客混合客流</strong>可持续（2021 年营业额 150 万）。单一书店已是成熟锚点——文化驿站需要差异化切入，而不是重复供给。</p>
+      </div>
+      <div class="tpb-col direction">
+        <span class="tpb-label">Direction · 本项目指向</span>
+        <p><strong>错峰共享制</strong>：白天阅览室属村民，晚上属驻村艺术家；咖啡厅作游客消费锚点；艺术家驻留轮替构成稳定"活"的使用主体——三类人群互不干扰又彼此供养。</p>
+      </div>
+    </div>
+
+    <footer class="bottom-bar">
+      <span>End of Deck · 设计指向 · 研究终</span>
+      <span><span class="accent-dot"></span>11 / 11</span>
+    </footer>
+  </section>
+
+</div>
+
+<!-- Navigation elements -->
+<div class="click-zone left" id="zoneLeft"></div>
+<div class="click-zone right" id="zoneRight"></div>
+
+<div class="pager" id="pager"></div>
+<div class="hint" id="hint">↑↓ 案例 · ←→ 图片 · 拖拽切图</div>
+
+<script>
+(function(){
+
+  /* -------------------------------------------------------------
+     CASE DATA — Replace `url` strings with real image paths later.
+     Placeholder blocks render when url === ''.
+  ------------------------------------------------------------- */
+  const CASES = {
+    '1': {
+      code: '01',
+      titleCn: '篱苑书屋',
+      titleEn: 'Liyuan Library',
+      architect: 'Li Xiaodong Atelier · 李晓东工作室',
+      year: '2011—12',
+      area: '170 ㎡',
+      location: '北京怀柔 · 交界河村',
+      typology: 'Rural Library · 乡村图书馆',
+      relevance: '乡村文化点的原型级参考——单一材料叙事 + 内部连续阶梯空间。"材料即态度"的精神，对本项目石/木/夯土的使用策略提供直接方向。',
+      images: [
+        { url: 'https://images.adsttc.com/media/images/500b/285e/28ba/0d25/b900/0101/large_jpg/stringio.jpg?1414389363', label: 'EXTERIOR',
+          analysisLabel: 'Concept · 概念',
+          analysisBody: '以村民日常拾取的柴薪为立面，建筑"消解"于山林。单一材料、单一体量、非纪念性——让非营利图书馆像从场地里长出来的，而不是外来物。' },
+        { url: 'https://images.adsttc.com/media/images/500b/2862/28ba/0d25/b900/0103/large_jpg/stringio.jpg?1414389345', label: 'INTERIOR',
+          analysisLabel: 'Material · 材料',
+          analysisBody: '45,000 根本地柴薪密铺于整个外壳（含屋面），内层钢结构 + 通透玻璃幕墙。柴薪天然透气，冬暖夏凉——被动式气候策略内嵌于材料本身。' },
+        { url: 'https://images.adsttc.com/media/images/500b/2a36/28ba/0d33/e600/0028/large_jpg/stringio.jpg?1414389373', label: 'PLAN', fit: 'contain',
+          analysisLabel: 'Spatial · 空间策略',
+          analysisBody: '30 × 4.35 × 6.3 m 的单体长盒子，内部没有家具重量：入口脱鞋，下沉阅读台与连续阶梯座席塑造"剧场式"读书场所。空间由光线切片定义。' }
+      ]
+    },
+    '2': {
+      code: '02',
+      titleCn: '平田农耕博物馆',
+      titleEn: 'Pingtian Agricultural Museum',
+      architect: 'DnA_徐甜甜',
+      year: '2015',
+      area: '307.7 ㎡',
+      location: '松阳平田村（与本项目同属松阳）',
+      typology: 'Adaptive Reuse · 适应性再利用',
+      relevance: '同属松阳县、同一气候与风貌管控体系。施工节点（当地夯土工匠可执行）与"针灸式介入"对本项目原村小学主体保留的策略支撑直接有效。',
+      images: [
+        { url: 'https://images.adsttc.com/media/images/5aeb/2d2b/f197/cc60/0900/0426/large_jpg/_DSC3676_HDR_(1).jpg?1525361949', label: 'EXTERIOR',
+          analysisLabel: 'Concept · 概念',
+          analysisBody: 'DnA 松阳系列的核心操作——"建筑针灸"。以极小干预修复夯土院落，在既有建筑肌理中嵌入农具展陈与手工艺工坊，让村落以公共空间的形式重新获得叙事能力。' },
+        { url: 'https://images.adsttc.com/media/images/5aeb/30a7/f197/cc60/0900/043a/large_jpg/%E5%AE%A4%E5%86%852.jpg?1525362826', label: 'INTERIOR',
+          analysisLabel: 'Material · 材料',
+          analysisBody: '原夯土墙保留并修复，内部木结构选择性更换与加固，屋面采用传统小青瓦。当代施工工艺与构造被藏于传统外皮之下——外观"没变"，性能完全刷新。' },
+        { url: 'https://images.adsttc.com/media/images/5aeb/2ebe/f197/cc33/4300/01c2/large_jpg/Pingtian_plan.jpg?1525362350', label: 'PLAN', fit: 'contain',
+          analysisLabel: 'Spatial · 空间策略',
+          analysisBody: '保留原夯土外壳，按程序分两组房子：下层为 L 形展厅，两侧可达；上层为手工艺工坊，利用坡屋顶争取通高。院落继续作为组织核心，而不是被"开大堂"取代。' }
+      ]
+    },
+    '3': {
+      code: '03',
+      titleCn: '陈家铺平民书局',
+      titleEn: 'Chenjiapu Civilian Bookstore',
+      architect: 'AZL · 张雷联合建筑事务所',
+      year: '2018',
+      area: '300 ㎡',
+      location: '松阳陈家铺村（本项目同村 ◉）',
+      typology: 'Same Village Anchor · 同村先例',
+      relevance: '同村先例——最高权重参考。验证了夯土壳 + 当代木钢内核在本村可行；书店混合村民 + 游客运营可持续（2021 营业额 150 万）；立面保留 + 内部重构可推至三层木结构。',
+      images: [
+        { url: 'https://images.adsttc.com/media/images/5cc6/a409/284d/d134/5d00/0010/large_jpg/03_exterior_view.jpg?1556521985', label: 'EXTERIOR',
+          analysisLabel: 'Concept · 概念',
+          analysisBody: '外表"没变"，内部是另一个世界。在既有夯土双坡民居壳体内，以最大限度的外部克制换取最大化的内部戏剧性——本项目可直接对标的操作范式。' },
+        { url: 'https://images.adsttc.com/media/images/5cc6/9831/284d/d124/2500/00fc/large_jpg/14-1_terraced_reading_space.jpg?1556518948', label: 'INTERIOR',
+          analysisLabel: 'Material · 材料',
+          analysisBody: '外壳——原夯土墙保留、小青瓦屋面；内核——木梁 + 木格栅 + 钢构加固。书架即结构：陈列系统同时承担分隔、结构与视觉秩序。' },
+        { url: 'https://images.adsttc.com/media/images/5cc6/96ee/284d/d124/2500/00f2/large_jpg/00_site_plan.jpg?1556518540', label: 'PLAN', fit: 'contain',
+          analysisLabel: 'Spatial · 空间策略',
+          analysisBody: '外部维持夯土双坡民居的原始尺度；内部利用挑高层高植入木质台地、楼梯与书架，构成连续垂直的阅读剧场。面向崖壁一侧开大窗框景，将梯田与远山纳入空间。' }
+      ]
+    },
+    '4': {
+      code: '04',
+      titleCn: '先锋厦地水田书店',
+      titleEn: 'Xiadi Paddy Field Bookstore',
+      architect: 'TAO · 迹·建筑事务所（华黎）',
+      year: '2019',
+      area: '约 200 ㎡',
+      location: '福建屏南 · 厦地古村',
+      typology: 'Ruin Container · 废墟容器',
+      relevance: '提供"当代材料如何说本地语言"的关键参考——混凝土通过本地木模板获得在地性，而非贴皮伪装。对本项目 900 ㎡ 新建部分如何在夯土村落中"降落"极重要。',
+      images: [
+        { url: 'https://images.adsttc.com/media/images/5e1c/5d03/3312/fd68/4500/0198/large_jpg/06_%E6%B0%B4%E7%94%B0%E4%B8%AD%E7%9A%84%E4%B9%A6%E5%BA%97_%C2%A9%E9%99%88%E9%A2%A2__The_bookstore_in_the_paddy_fields_%C2%A9CHEN_Hao.jpg?1578917116', label: 'EXTERIOR',
+          analysisLabel: 'Concept · 概念',
+          analysisBody: '废墟不修复，新结构不外显——新与旧的对话完全发生在内部。从外部几乎看不出任何干预痕迹，这是"废墟容器"操作的最极端形态。' },
+        { url: 'https://images.adsttc.com/media/images/5e1c/5daa/3312/fd58/9c00/03df/large_jpg/18_%E4%BA%8C%E5%B1%82%E9%98%85%E8%AF%BB%E5%8C%BA_%C2%A9%E9%99%88%E9%A2%A2_Second_floor_reading_area_%C2%A9CHEN_Hao.jpg?1578917280', label: 'INTERIOR',
+          analysisLabel: 'Material · 材料',
+          analysisBody: '原夯土残墙 + 现浇混凝土（以本地碳化松木模板浇筑形成木纹肌理）+ 钢构。混凝土的木纹与夯土的粗砾在光下形成层次，设计到施工仅 69 天。' },
+        { url: 'https://images.adsttc.com/media/images/5e1c/523b/3312/fd58/9c00/03bf/large_jpg/02_%E5%B9%B3%E9%9D%A2%E5%9B%BE_Plans.jpg?1578914349', label: 'PLAN', fit: 'contain',
+          analysisLabel: 'Spatial · 空间策略',
+          analysisBody: '建筑位于水田中央，保留三面完整夯土墙与破碎院墙作"容器"。新结构完全藏于残墙之后，通过局部屋顶开洞、墙面缝隙引入光线。' }
+      ]
+    }
+  };
+
+  const pad2 = n => String(n).padStart(2, '0');
+
+  /* ---------------- Carousel ---------------- */
+  function buildSlide(imgData, caseInfo, idx, total){
+    const slide = document.createElement('div');
+    slide.className = 'slide' + (idx === 0 ? ' active' : '');
+
+    if(imgData.url){
+      slide.classList.add('has-img');
+      if(imgData.fit === 'contain') slide.classList.add('fit-contain');
+
+      const img = new Image();
+      img.src = imgData.url;
+      img.alt = caseInfo.titleCn + ' — ' + imgData.label;
+      img.loading = 'lazy';
+      img.decoding = 'async';
+      img.referrerPolicy = 'no-referrer';
+      img.addEventListener('error', () => {
+        slide.classList.remove('has-img', 'fit-contain');
+        slide.innerHTML = placeholderHTML(imgData, caseInfo, idx, total);
+      });
+      slide.appendChild(img);
+
+      slide.insertAdjacentHTML('beforeend', `
+        <div class="slide-scrim"></div>
+        <span class="ph-tag">${imgData.label}</span>
+      `);
+    } else {
+      slide.innerHTML = placeholderHTML(imgData, caseInfo, idx, total);
+    }
+    return slide;
+  }
+
+  function placeholderHTML(imgData, caseInfo, idx, total){
+    const fig = `Fig. ${pad2(idx + 1)} / ${pad2(total)}`;
+    return `
+      <span class="ph-code">CASE ${caseInfo.code}</span>
+      <span class="slide-counter">${fig}</span>
+      <span class="ph-tag">${imgData.label}</span>
+      <div class="ph-center">
+        <div class="ph-cn">${caseInfo.titleCn}</div>
+        <div class="ph-en">${caseInfo.titleEn}</div>
+        <div class="ph-big-label">${imgData.label}</div>
+      </div>
+    `;
+  }
+
+  function initCarousel(container){
+    const key = container.dataset.case;
+    const info = CASES[key];
+    if(!info) return null;
+
+    const total = info.images.length;
+
+    // Build filmstrip track
+    const track = document.createElement('div');
+    track.className = 'slides-track';
+    info.images.forEach((img, i) => {
+      track.appendChild(buildSlide(img, info, i, total));
+    });
+    container.appendChild(track);
+
+    // Dots
+    const dotsWrap = document.createElement('div');
+    dotsWrap.className = 'carousel-dots';
+    info.images.forEach((_, i) => {
+      const dot = document.createElement('span');
+      dot.className = 'c-dot' + (i === 0 ? ' active' : '');
+      dot.dataset.idx = i;
+      dot.setAttribute('aria-label', `Show image ${i + 1}`);
+      dotsWrap.appendChild(dot);
+    });
+    container.appendChild(dotsWrap);
+
+    const dots = container.querySelectorAll('.c-dot');
+    let active = 0;
+
+    // Caption
+    const captionEl = document.querySelector(`.case-caption[data-case="${key}"]`);
+    let captionMain = null;
+    if(captionEl){
+      captionEl.innerHTML = `
+        <div class="caption-main"></div>
+        <div class="caption-rel">
+          <span class="c-label">◉ Relevance · 关联本项目</span>
+          <p>${info.relevance}</p>
+        </div>
+      `;
+      captionMain = captionEl.querySelector('.caption-main');
+    }
+
+    // Stage (for photo-mode color inversion)
+    const stage = container.closest('.case-stage');
+    function applyMode(idx){
+      if(!stage) return;
+      const img = info.images[idx];
+      const isPhoto = !!img.url && img.fit !== 'contain';
+      stage.classList.toggle('photo-mode', isPhoto);
+    }
+    applyMode(0);
+
+    function renderCaptionMain(img){
+      if(!captionMain) return;
+      captionMain.innerHTML = `
+        <span class="c-label">— ${img.analysisLabel}</span>
+        <p>${img.analysisBody}</p>
+      `;
+    }
+    renderCaptionMain(info.images[0]);
+
+    // Translate control
+    function getWidth(){ return container.getBoundingClientRect().width; }
+    function setTranslate(px, animate){
+      if(animate) track.classList.remove('dragging');
+      else track.classList.add('dragging');
+      track.style.transform = `translate3d(${px}px, 0, 0)`;
+    }
+    function settle(){ setTranslate(-active * getWidth(), true); }
+
+    setTranslate(0, false);
+    requestAnimationFrame(() => track.classList.remove('dragging'));
+
+    function go(idx){
+      if(total < 2){ settle(); return; }
+      idx = ((idx % total) + total) % total;
+      const changed = idx !== active;
+      active = idx;
+      dots.forEach((d, i) => d.classList.toggle('active', i === idx));
+      applyMode(idx);
+      if(changed && captionMain){
+        captionMain.classList.add('fading');
+        setTimeout(() => {
+          renderCaptionMain(info.images[idx]);
+          captionMain.classList.remove('fading');
+        }, 150);
+      }
+      settle();
+    }
+
+    dots.forEach((d, i) => d.addEventListener('click', e => { e.stopPropagation(); go(i); }));
+
+    // Pointer drag — track follows cursor/finger in real time
+    let dragStartX = null, dragStartY = null, dragId = null;
+    let baseX = 0, didDrag = false, axisLocked = null;
+
+    container.addEventListener('pointerdown', e => {
+      if(e.target.closest('.c-dot')) return;
+      if(e.button !== undefined && e.button !== 0) return;
+      dragStartX = e.clientX;
+      dragStartY = e.clientY;
+      dragId = e.pointerId;
+      didDrag = false;
+      axisLocked = null;
+      baseX = -active * getWidth();
+      container.classList.add('is-dragging');
+      track.classList.add('dragging'); // disable transition during drag
+      try { container.setPointerCapture(e.pointerId); } catch(_) {}
+    });
+
+    container.addEventListener('pointermove', e => {
+      if(dragStartX === null || e.pointerId !== dragId) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+
+      // Detect axis (lock after ~8px of movement)
+      if(axisLocked === null){
+        if(Math.abs(dx) > 8 || Math.abs(dy) > 8){
+          axisLocked = Math.abs(dx) > Math.abs(dy) ? 'x' : 'y';
+        } else return;
+      }
+      if(axisLocked === 'y') return; // let vertical scroll through
+
+      didDrag = true;
+      const w = getWidth();
+      let targetX = baseX + dx;
+      const minX = -(total - 1) * w;
+      const maxX = 0;
+      // Rubber-band at edges: past edge, drag resistance 3×
+      if(targetX > maxX) targetX = maxX + (targetX - maxX) * 0.32;
+      if(targetX < minX) targetX = minX - (minX - targetX) * 0.32;
+      track.style.transform = `translate3d(${targetX}px, 0, 0)`;
+
+      // Real-time photo-mode based on nearest slide
+      const nearestIdx = Math.max(0, Math.min(total - 1, Math.round(-targetX / w)));
+      applyMode(nearestIdx);
+    });
+
+    function endDrag(e){
+      if(dragStartX === null) return;
+      if(e.pointerId !== dragId) return;
+      const dx = e.clientX - dragStartX;
+      const dy = e.clientY - dragStartY;
+      dragStartX = null;
+      dragId = null;
+      container.classList.remove('is-dragging');
+      try { container.releasePointerCapture(e.pointerId); } catch(_) {}
+
+      if(axisLocked !== 'x'){
+        applyMode(active);
+        return;
+      }
+
+      const w = getWidth();
+      // Commit if dragged past ~18% of width or 70px (whichever is smaller)
+      const threshold = Math.min(w * 0.18, 70);
+      let newIdx = active;
+      if(Math.abs(dx) > threshold && Math.abs(dx) > Math.abs(dy)){
+        if(dx < 0 && active < total - 1) newIdx = active + 1;
+        else if(dx > 0 && active > 0) newIdx = active - 1;
+      }
+      go(newIdx); // if same idx, settle snaps back with animation
+    }
+    container.addEventListener('pointerup', endDrag);
+    container.addEventListener('pointercancel', endDrag);
+
+    // Suppress click after drag
+    container.addEventListener('click', e => {
+      if(didDrag){ e.stopPropagation(); e.preventDefault(); didDrag = false; }
+    }, true);
+
+    // Re-settle on resize so track alignment stays correct
+    window.addEventListener('resize', settle);
+
+    return {
+      prev: () => go(active - 1),
+      next: () => go(active + 1),
+      go
+    };
+  }
+
+  // Initialize all carousels
+  document.querySelectorAll('.case-image[data-case]').forEach(container => {
+    const api = initCarousel(container);
+    if(!api) return;
+    container._carouselApi = api;
+  });
+
+  /* ---------------- Page navigation ---------------- */
+  const pages = document.querySelectorAll('.page');
+  const pager = document.getElementById('pager');
+  const hint = document.getElementById('hint');
+  const zoneLeft = document.getElementById('zoneLeft');
+  const zoneRight = document.getElementById('zoneRight');
+  let currentPage = 0;
+
+  pages.forEach((_, i) => {
+    const d = document.createElement('span');
+    d.className = 'dot' + (i === 0 ? ' active' : '');
+    pager.appendChild(d);
+  });
+  const pagerDots = pager.querySelectorAll('.dot');
+
+  function goToPage(idx){
+    if(idx < 0 || idx >= pages.length || idx === currentPage) return;
+    pages[currentPage].classList.remove('active');
+    pagerDots[currentPage].classList.remove('active');
+    currentPage = idx;
+    pages[currentPage].classList.add('active');
+    pagerDots[currentPage].classList.add('active');
+  }
+
+  function nextPage(){ goToPage(currentPage + 1); }
+  function prevPage(){ goToPage(currentPage - 1); }
+
+  /* ---------------- Keyboard ----------------
+     ↑ / ↓   switch between cases (pages)
+     ← / →   switch between images on the current case page
+     Space / PageDown  next page   ·   PageUp  prev page
+     Home / End        first / last page
+  ---------------------------------------------------------- */
+  function currentCarousel(){
+    const el = pages[currentPage].querySelector('.case-image[data-case]');
+    return el ? el._carouselApi : null;
+  }
+
+  document.addEventListener('keydown', e => {
+    if(e.key === 'ArrowUp' || e.key === 'PageUp'){
+      e.preventDefault();
+      prevPage();
+    } else if(e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' '){
+      e.preventDefault();
+      nextPage();
+    } else if(e.key === 'ArrowRight'){
+      const c = currentCarousel();
+      if(c){ e.preventDefault(); c.next(); }
+    } else if(e.key === 'ArrowLeft'){
+      const c = currentCarousel();
+      if(c){ e.preventDefault(); c.prev(); }
+    } else if(e.key === 'Home'){
+      goToPage(0);
+    } else if(e.key === 'End'){
+      goToPage(pages.length - 1);
+    }
+  });
+
+  zoneLeft.addEventListener('click', prevPage);
+  zoneRight.addEventListener('click', nextPage);
+
+  setTimeout(() => hint.classList.add('fade'), 4500);
+
+  /* ---------------- Touch swipe (page nav only — carousel uses pointer events) ---------------- */
+  let touchX = null, touchY = null, touchInCarousel = false;
+  document.addEventListener('touchstart', e => {
+    touchX = e.changedTouches[0].screenX;
+    touchY = e.changedTouches[0].screenY;
+    touchInCarousel = !!e.target.closest('.case-image[data-case]');
+  }, { passive: true });
+  document.addEventListener('touchend', e => {
+    if(touchX === null) return;
+    if(touchInCarousel){ touchX = null; touchInCarousel = false; return; }
+    const dx = e.changedTouches[0].screenX - touchX;
+    const dy = e.changedTouches[0].screenY - touchY;
+    if(Math.abs(dx) > 40 && Math.abs(dx) > Math.abs(dy)){
+      dx < 0 ? nextPage() : prevPage();
+    }
+    touchX = null;
+  });
+})();
+</script>
+
+</body>
+</html>

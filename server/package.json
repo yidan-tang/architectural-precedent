@@ -1,0 +1,28 @@
+{
+  "name": "architectural-precedent-agent",
+  "version": "0.2.0",
+  "description": "Local agent that turns an architectural design brief into a structured precedent-research HTML deck.",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "test": "node --test test/*.test.js"
+  },
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.40.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "fflate": "0.8.3",
+    "pdfjs-dist": "6.5.438"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "devDependencies": {
+    "jsdom": "^26.1.0"
+  },
+  "overrides": {
+    "qs": "6.16.2"
+  }
+}

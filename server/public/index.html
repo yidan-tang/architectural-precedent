@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Architectural Precedent Agent · Architect Trial</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600&family=JetBrains+Mono:wght@300;400;500&family=Noto+Sans+SC:wght@200;300;400;500;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#FFFFFF;
+    --paper:#FAFAFA;
+    --ink:#141414;
+    --ink-2:#4A4A48;
+    --ink-3:#8B8A8A;
+    --rule:#DDDDDD;
+    --rule-soft:#EEEEEE;
+    --accent:#B84A2F;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Inter','Noto Sans SC',-apple-system,sans-serif;
+    background:var(--bg);
+    color:var(--ink);
+    font-weight:300;
+    -webkit-font-smoothing:antialiased;
+    line-height:1.6;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;font-weight:400}
+
+  .top-bar, .bottom-bar{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    padding:1.6vh 5.5vw;
+  }
+  .top-bar{border-bottom:1px solid var(--rule)}
+  .bottom-bar{border-top:1px solid var(--rule);position:fixed;bottom:0;left:0;right:0;background:var(--bg)}
+  .accent-dot{display:inline-block;width:6px;height:6px;background:var(--accent);border-radius:50%;margin-right:8px;vertical-align:middle}
+
+  main{
+    max-width:1200px;
+    margin:0 auto;
+    padding:6vh 5.5vw 12vh 5.5vw;
+  }
+
+  .hero{
+    margin-bottom:5vh;
+    padding-bottom:3vh;
+    border-bottom:1px solid var(--rule);
+  }
+  .kicker{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.3em;
+    text-transform:uppercase;
+    color:var(--accent);
+    margin-bottom:2vh;
+    display:flex;
+    align-items:center;
+    gap:12px;
+  }
+  .kicker::before{
+    content:"";
+    display:inline-block;
+    width:28px;
+    height:1px;
+    background:var(--accent);
+  }
+  h1{
+    font-family:'Noto Sans SC',sans-serif;
+    font-weight:300;
+    font-size:clamp(36px,4.6vw,64px);
+    line-height:1.05;
+    letter-spacing:-0.01em;
+    color:var(--ink);
+    margin-bottom:2vh;
+  }
+  .lede{
+    font-size:15px;
+    line-height:1.7;
+    color:var(--ink-2);
+    max-width:60ch;
+  }
+  .lede strong{font-weight:500;color:var(--ink)}
+
+  .form-grid{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5vw;
+    align-items:start;
+  }
+  @media (max-width:900px){
+    .form-grid{grid-template-columns:1fr;gap:5vh}
+  }
+
+  .form-col label{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.26em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    margin-bottom:1.4vh;
+  }
+  .form-col label::before{
+    content:"";
+    display:inline-block;
+    width:18px;
+    height:1px;
+    background:var(--ink-3);
+  }
+  textarea{
+    width:100%;
+    min-height:48vh;
+    padding:18px;
+    border:1px solid var(--rule);
+    background:var(--paper);
+    font-family:'Noto Sans SC','Inter',monospace;
+    font-size:13.5px;
+    line-height:1.7;
+    color:var(--ink);
+    resize:vertical;
+    font-weight:300;
+    transition:border-color 0.2s ease;
+  }
+  textarea:focus{
+    outline:none;
+    border-color:var(--ink);
+  }
+  .file-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:12px}
+  .form-col .file-picker{
+    position:relative;display:inline-block;margin:0;padding:8px 16px;
+    border:1px solid var(--ink);color:var(--ink);font:inherit;font-size:13px;letter-spacing:0;
+  }
+  .file-picker::before{display:none!important}
+  .file-picker:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+  .file-picker input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+  .file-hint,.file-status,.brief-length{font-size:12px;color:var(--ink-2);line-height:1.6}
+  .file-status{overflow-wrap:anywhere}
+  .file-status:not(:empty){margin-bottom:8px}
+  .brief-length{margin-top:4px;text-align:right}
+  .file-status[data-error],.brief-length[data-error]{color:var(--accent)}
+  .form-actions{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    margin-top:2vh;
+  }
+  button{
+    background:var(--ink);
+    color:var(--bg);
+    border:none;
+    padding:14px 28px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.24em;
+    text-transform:uppercase;
+    cursor:pointer;
+    transition:background 0.2s ease;
+  }
+  button:hover:not(:disabled){background:var(--accent)}
+  button:disabled{opacity:0.4;cursor:wait}
+  .btn-secondary{
+    background:transparent;
+    color:var(--ink-3);
+    border:1px solid var(--rule);
+    padding:13px 18px;
+  }
+  .btn-secondary:hover:not(:disabled){background:transparent;color:var(--accent);border-color:var(--accent)}
+
+  .info-col{padding-top:0}
+  .info-col h3{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.26em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    margin-bottom:1.6vh;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .info-col h3::before{
+    content:"";
+    display:inline-block;
+    width:18px;
+    height:1px;
+    background:var(--ink-3);
+  }
+  .info-col h3.accent{color:var(--accent)}
+  .info-col h3.accent::before{background:var(--accent)}
+  .info-col ol{
+    list-style:none;
+    padding:0;
+    counter-reset:steps;
+    margin-bottom:3.5vh;
+  }
+  .info-col ol li{
+    counter-increment:steps;
+    position:relative;
+    padding:8px 0 8px 36px;
+    font-size:13px;
+    line-height:1.65;
+    color:var(--ink-2);
+    border-bottom:1px solid var(--rule-soft);
+  }
+  .info-col ol li:last-child{border-bottom:none}
+  .info-col ol li::before{
+    content:counter(steps,decimal-leading-zero);
+    position:absolute;
+    left:0;
+    top:10px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    color:var(--accent);
+    letter-spacing:0.06em;
+  }
+  .info-col p{
+    font-size:13px;
+    line-height:1.7;
+    color:var(--ink-2);
+    margin-bottom:1.6vh;
+  }
+  .info-col code{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11.5px;
+    background:var(--paper);
+    padding:1px 6px;
+    border:1px solid var(--rule-soft);
+  }
+
+  /* Status panel — appears during generation */
+  #status{
+    margin-top:5vh;
+    padding:3vh 0;
+    border-top:1px solid var(--rule);
+    display:none;
+  }
+  #status.show{display:block}
+  .status-line{
+    display:flex;
+    align-items:center;
+    gap:14px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    letter-spacing:0.18em;
+    text-transform:uppercase;
+    color:var(--ink-2);
+    padding:6px 0;
+  }
+  .status-line.active{color:var(--ink)}
+  .status-line .dot{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--rule);
+    transition:background 0.3s ease;
+  }
+  .status-line.active .dot{background:var(--accent)}
+  .status-line.done .dot{background:var(--ink-2)}
+  .elapsed{
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    color:var(--accent);
+    margin-left:auto;
+  }
+  .error-box{
+    border-left:3px solid var(--accent);
+    padding:14px 18px;
+    background:var(--paper);
+    margin-top:2vh;
+    font-size:13px;
+    line-height:1.7;
+    color:var(--ink-2);
+  }
+  .error-box pre{
+    margin-top:8px;
+    padding:10px;
+    background:#FFFFFF;
+    border:1px solid var(--rule-soft);
+    font-family:'JetBrains Mono',monospace;
+    font-size:11px;
+    line-height:1.5;
+    overflow-x:auto;
+    white-space:pre-wrap;
+    color:var(--ink-2);
+  }
+
+  /* Result panel */
+  #result{
+    margin-top:5vh;
+    display:none;
+  }
+  #result.show{display:block}
+  .result-head{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    padding-bottom:2vh;
+    border-bottom:1px solid var(--rule);
+    margin-bottom:2.4vh;
+    flex-wrap:wrap;
+    gap:14px;
+  }
+  .result-title{
+    font-family:'Noto Sans SC',sans-serif;
+    font-size:22px;
+    font-weight:400;
+  }
+  .result-stats{
+    display:flex;
+    gap:28px;
+    font-family:'JetBrains Mono',monospace;
+    font-size:10.5px;
+    letter-spacing:0.16em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+  }
+  .result-stats strong{color:var(--ink);font-weight:500}
+  .result-actions{
+    display:flex;
+    gap:12px;
+    margin-bottom:2vh;
+  }
+  #download{align-self:center;color:var(--ink);text-underline-offset:4px}
+  iframe.preview{
+    width:100%;
+    height:80vh;
+    border:1px solid var(--rule);
+    background:var(--bg);
+  }
+
+  details.history{margin-top:5vh}
+  details.history summary{
+    font-family:'JetBrains Mono',monospace;
+    font-size:10px;
+    letter-spacing:0.26em;
+    text-transform:uppercase;
+    color:var(--ink-3);
+    cursor:pointer;
+    padding:1vh 0;
+  }
+  details.history summary:hover{color:var(--ink)}
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <span>ARCHITECTURAL PRECEDENT AGENT</span>
+  <span>ARCHITECT TRIAL · 0.2</span>
+</header>
+
+<main>
+  <div class="hero">
+    <div class="kicker">Pre-Design Research · 案例研究</div>
+    <h1>建筑案例研究 Agent</h1>
+    <p class="lede">上传或粘贴一份建筑设计任务书。Agent 将<strong>解析关键词、检索案例、提取图片、归纳设计策略</strong>，生成 11 页前期研究汇报。点击生成后，正文会发送给部署方配置的 AI 平台。持有报告链接的人可以查看内容，请使用可外发的项目资料。</p>
+  </div>
+
+  <div class="form-grid">
+    <div class="form-col">
+      <form id="form">
+        <label for="brief">Design Brief · 设计任务书</label>
+        <div class="file-row">
+          <label class="file-picker">上传任务书<input type="file" id="brief-file" accept=".docx,.pdf,.txt,.md" aria-describedby="file-hint"></label>
+          <span class="file-hint" id="file-hint">DOCX、文字版 PDF、TXT、MD · 最大 10 MB</span>
+        </div>
+        <p id="file-status" class="file-status" role="status" aria-live="polite"></p>
+        <textarea name="brief" id="brief" maxlength="16000" placeholder="例：&#10;&#10;项目位置：浙江省丽水市松阳县…&#10;用地性质：原废弃村小学改造 + 新建扩建&#10;总建筑面积：约 1500 ㎡&#10;功能构成：阅览 / 展陈 / 多功能厅 / 艺术家驻留&#10;场地特征：山脊崖居古村，海拔 850m，面东向梯田&#10;材料策略：本地石、木、夯土&#10;关键词：乡村振兴 / 在地材料 / 公共性 / 山地地形" required></textarea>
+        <p id="brief-length" class="brief-length"></p>
+        <div class="form-actions">
+          <button type="submit" id="submit-btn">生成 Deck</button>
+          <button type="button" class="btn-secondary" id="sample-btn">加载示例</button>
+        </div>
+      </form>
+    </div>
+
+    <aside class="form-col info-col">
+      <h3>Agent Workflow · 工作流</h3>
+      <ol>
+        <li>解析任务书，提取功能 / 规模 / 场地 / 风格关键词</li>
+        <li>调用 web_search 检索 4 个相关建筑案例（ArchDaily / 谷德 / Dezeen）</li>
+        <li>web_fetch 每个项目页，提取图片 URL 和元数据</li>
+        <li>为每个案例生成结构化分析（概念 / 材料 / 空间）</li>
+        <li>合成 5 个设计指向：场地 / 形式 / 空间 / 材料 / 运营</li>
+        <li>套模板生成 HTML，呈现为可翻页 deck</li>
+      </ol>
+
+      <h3 class="accent">Output · 输出</h3>
+      <p>11 页 HTML 演示文稿：封面 + 4 个案例页（含图片轮播）+ 横向对比表 + 5 页设计指向。</p>
+      <p><a href="/template-preview" target="_blank" rel="noopener">查看松阳示例 ↗</a> · 支持 <code>↑↓</code> 翻页 · <code>←→</code> 切图片 · 拖拽切换 · 全屏演示。</p>
+    </aside>
+  </div>
+
+  <!-- Status (during generation) -->
+  <div id="status">
+    <div class="status-line" role="status">
+      <span class="dot"></span><span id="progress">正在研究，请保持本页打开</span>
+      <span class="elapsed" id="elapsed">0s</span>
+    </div>
+  </div>
+
+  <!-- Result (after generation) -->
+  <div id="result">
+    <div class="result-head">
+      <div class="result-title">生成完成</div>
+      <div class="result-stats" id="stats"></div>
+    </div>
+    <div class="result-actions">
+      <button onclick="window.open(document.getElementById('preview').src, '_blank')">在新窗口打开</button>
+      <a id="download" class="btn-secondary" download>下载 HTML</a>
+      <button class="btn-secondary" onclick="document.getElementById('result').classList.remove('show');document.querySelector('#status').classList.remove('show');">返回继续</button>
+    </div>
+    <iframe title="建筑前期研究汇报" id="preview" class="preview"></iframe>
+  </div>
+
+  <details class="history">
+    <summary>本次会话记录 · Session History</summary>
+    <ol id="history-list" style="margin-top:14px;font-size:12px;color:var(--ink-3);font-family:'JetBrains Mono',monospace"></ol>
+  </details>
+</main>
+
+<footer class="bottom-bar">
+  <span>Architect Trial · GitHub: yidan-tang/architectural-precedent</span>
+  <span><span class="accent-dot"></span>v0.2 · 2026</span>
+</footer>
+
+<script>
+const SAMPLE_BRIEF = `# 设计任务书 — 松阳·陈家铺乡村文化驿站
+
+项目位置：浙江省丽水市松阳县四都乡陈家铺村
+用地性质：村集体建设用地（原废弃村小学改建 + 新建扩建）
+总建筑面积：约 1,500 ㎡（改造 600 + 新建 900）
+高度控制：≤ 2 层 / 10 米（与村落肌理协调）
+预算：≤ 3,500 元/㎡
+
+场地特征：
+- 山脊崖居型古村，海拔约 850 米
+- 面东，视野涵盖晨雾、远山、梯田
+- 原村小学坐北朝南，夯土墙体保存较完整
+- 场地前后高差约 4 米
+
+功能构成：
+- 阅览 / 小型图书室 300 ㎡
+- 乡村档案 / 展陈 200 ㎡
+- 多功能厅（80 人讲座 / 观影 / 村民议事）180 ㎡
+- 村民活动室 150 ㎡
+- 访客咖啡 / 简餐 120 ㎡
+- 驻村艺术家工作室（3 间）150 ㎡
+
+设计要求：
+- 优先使用本地石、木、夯土
+- 公共性 + 在地性 + 轻度当代
+- 体量、坡屋顶、色彩与传统民居协调
+- 被动式通风、自然采光、雨水收集
+
+关键词：乡村振兴 / 适应性再利用 / 在地材料 / 公共性 / 山地地形 / 文化复兴`;
+
+const form = document.getElementById('form');
+const briefInput = document.getElementById('brief');
+const submitBtn = document.getElementById('submit-btn');
+const sampleBtn = document.getElementById('sample-btn');
+const statusEl = document.getElementById('status');
+const resultEl = document.getElementById('result');
+const previewIframe = document.getElementById('preview');
+const statsEl = document.getElementById('stats');
+const elapsedEl = document.getElementById('elapsed');
+const historyList = document.getElementById('history-list');
+const fileInput = document.getElementById('brief-file');
+const fileStatus = document.getElementById('file-status');
+const briefLength = document.getElementById('brief-length');
+let importing = false;
+let generating = false;
+
+function updateForm() {
+  const count = briefInput.value.trim().length;
+  const max = briefInput.maxLength;
+  const overLimit = count > max;
+  briefLength.textContent = overLimit
+    ? `正文共 ${count.toLocaleString()} 字，请精简到 ${max.toLocaleString()} 字后生成。`
+    : `${count.toLocaleString()} / ${max.toLocaleString()} 字`;
+  briefLength.toggleAttribute('data-error', overLimit);
+  briefInput.setCustomValidity(overLimit ? briefLength.textContent : '');
+  briefInput.readOnly = importing || generating;
+  fileInput.disabled = sampleBtn.disabled = importing || generating;
+  submitBtn.disabled = importing || generating || overLimit;
+}
+briefInput.setAttribute('aria-describedby', 'brief-length');
+briefInput.addEventListener('input', updateForm);
+updateForm();
+
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  importing = true;
+  fileStatus.removeAttribute('data-error');
+  fileStatus.textContent = '正在读取 ' + file.name + '…';
+  updateForm();
+  try {
+    const { readBrief } = await import('./read-brief.js');
+    const { text, warning } = await readBrief(file);
+    briefInput.value = text;
+    fileStatus.textContent = `已导入 ${file.name}。请核对或编辑下方正文。${warning}`;
+  } catch (error) {
+    fileStatus.setAttribute('data-error', '');
+    fileStatus.textContent = error.message;
+  } finally {
+    importing = false;
+    fileInput.value = '';
+    updateForm();
+  }
+});
+
+sampleBtn.addEventListener('click', () => {
+  briefInput.value = SAMPLE_BRIEF;
+  fileStatus.textContent = '';
+  updateForm();
+  briefInput.focus();
+});
+
+let elapsedTimer = null;
+function startElapsed(){
+  const start = Date.now();
+  elapsedEl.textContent = '0s';
+  elapsedTimer = setInterval(() => {
+    const sec = ((Date.now() - start) / 1000).toFixed(0);
+    elapsedEl.textContent = `${sec}s`;
+  }, 200);
+}
+function stopElapsed(){ if(elapsedTimer) { clearInterval(elapsedTimer); elapsedTimer = null; } }
+
+form.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const brief = briefInput.value.trim();
+  if(!brief || importing || generating || brief.length > briefInput.maxLength) return;
+
+  // Reset UI
+  generating = true;
+  updateForm();
+  resultEl.classList.remove('show');
+  statusEl.classList.add('show');
+  document.querySelectorAll('.status-line').forEach(el => el.classList.remove('active','done'));
+  document.querySelector('.error-box')?.remove();
+
+  document.getElementById('progress').textContent = '正在研究，请保持本页打开';
+  document.querySelector('.status-line').classList.add('active');
+  startElapsed();
+
+  try {
+    const res = await fetch('/api/generate', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ brief })
+    });
+    stopElapsed();
+
+    if(!res.ok){
+      const err = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+      showError(err);
+      return;
+    }
+    const data = await res.json();
+    document.querySelectorAll('.status-line').forEach(el => { el.classList.remove('active'); el.classList.add('done'); });
+
+    document.getElementById('progress').textContent = '汇报已生成';
+    document.getElementById('download').href = data.deckUrl;
+    document.getElementById('download').download = data.id + '.html';
+    // Show result
+    previewIframe.onload = () => {
+      if (!resultEl.classList.contains('show')) return;
+      resultEl.scrollIntoView?.({block:'start'});
+      previewIframe.focus();
+    };
+    previewIframe.src = data.deckUrl;
+    statsEl.textContent = data.stats.elapsedSec + ' 秒 · 4 个案例 · 5 项设计策略';
+    resultEl.classList.add('show');
+
+    // Add to history
+    const li = document.createElement('li');
+    const t = new Date().toLocaleTimeString();
+    const link = document.createElement('a');
+    link.href = data.deckUrl;
+    link.target = '_blank';
+    link.rel = 'noopener';
+    link.textContent = '[' + t + '] ' + data.deckData.project.titleCn;
+    li.append(link);
+    historyList.prepend(li);
+  } catch (e) {
+    stopElapsed();
+    showError({ error: e.message });
+  } finally {
+    generating = false;
+    updateForm();
+  }
+});
+
+function showError(err){
+  const div = document.createElement('div');
+  div.className = 'error-box';
+  document.querySelector('.status-line').classList.remove('active');
+  document.getElementById('progress').textContent = '生成未完成';
+  div.setAttribute('role','alert');
+  div.textContent = err.error || '连接中断，请重新尝试。';
+  statusEl.appendChild(div);
+}
+</script>
+</body>
+</html>

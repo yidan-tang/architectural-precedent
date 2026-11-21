@@ -2,11 +2,11 @@
 
 ## 朋友如何使用
 
-在电脑浏览器打开服务地址，用固定用户名 trial 和负责人单独提供的口令进入。粘贴可发送给部署方所选 AI 平台的任务书，点击「生成 Deck」，保持页面打开。完成后可直接翻页、查看出处、单独打开或下载。下载文件包含报告文字与交互，远程图片和网页字体仍需联网。
+在电脑浏览器打开服务地址即可开始，无需账号或密码。粘贴可发送给部署方所选 AI 平台的任务书，点击「生成 Deck」，保持页面打开。完成后可直接翻页、查看出处、单独打开或下载。下载文件包含报告文字与交互，远程图片和网页字体仍需联网。
 
 ## Render Web Service
 
-首轮试用可以直接[在 Render 部署试用分支](https://render.com/deploy?repo=https://github.com/yidan-tang/architectural-precedent/tree/trial/copilot-mvp)。登录自己的 Render 工作区，在部署预览中确认只有一个 Free Web Service，将 OpenAI 平台 Key 填入 `OPENAI_API_KEY` 后确认部署。Render 会生成 `TRIAL_PASSWORD`；部署完成后，在服务的 Environment 页面查看该值，单独发给试用者。试用用户名为 `trial`。
+首轮试用可以直接[在 Render 部署试用分支](https://render.com/deploy?repo=https://github.com/yidan-tang/architectural-precedent/tree/trial/copilot-mvp)。登录自己的 Render 工作区，在部署预览中确认只有一个 Free Web Service，将 OpenAI 平台 Key 填入 `OPENAI_API_KEY` 后确认部署。当服务显示 Live 后，将页面顶部的 onrender.com 地址发给朋友。已部署的服务选择 Manual Deploy → Deploy latest commit 即可更新。
 
 此配置使用临时磁盘，生成后请下载 HTML。OpenAI 的模型和联网搜索用量计入部署者的 API 账单。试用期间手动发布新版本，避免朋友演示时自动重启服务。
 
@@ -25,12 +25,11 @@
 | OPENAI_MODEL | 可选，默认 gpt-5.4-mini，需支持 Responses API、联网搜索和函数调用 |
 | ANTHROPIC_API_KEY | 仅 Claude 模式需要 |
 | AI_PROVIDER | 可选，openai 或 anthropic。默认优先已有 OpenAI Key，仅有 Anthropic Key 时使用 Claude |
-| TRIAL_PASSWORD | 至少 16 字符的随机口令 |
 | ANTHROPIC_MODEL | 可选，默认 claude-sonnet-4-6 |
 | PORT | 使用平台注入的端口 |
 | DECK_DIR | 可选，有持久磁盘时设为 /var/data/decks，磁盘挂载至 /var/data |
 
-用平台的 HTTPS 地址试用。生产模式会在缺少 Key、口令过短或输出路径不可写时阻止启动。默认写入 server/generated。临时磁盘在重启或重新部署后会丢失生成文件；短期试用请当场下载 HTML，需要跨重启保存链接时选择支持持久磁盘的付费实例。首次生成前在所选 API 平台确认额度、模型和联网搜索权限。已创建服务若要改用 OpenAI，可在该服务 Environment 手动添加 OPENAI_API_KEY，若原来指定了 AI_PROVIDER 则改为 openai，并手动部署最新试用提交。本项目不会自动开通付费服务。
+用平台的 HTTPS 地址试用。生产模式会在缺少 Key 或输出路径不可写时阻止启动。默认写入 server/generated。临时磁盘在重启或重新部署后会丢失生成文件；短期试用请当场下载 HTML，需要跨重启保存链接时选择支持持久磁盘的付费实例。首次生成前在所选 API 平台确认额度、模型和联网搜索权限。已创建服务若要改用 OpenAI，可在该服务 Environment 手动添加 OPENAI_API_KEY，若原来指定了 AI_PROVIDER 则改为 openai，并手动部署最新试用提交。本项目不会自动开通付费服务。
 
 [Render 部署说明](https://render.com/docs/deploy-node-express-app) · [持久磁盘说明](https://render.com/docs/disks) · [OpenAI 联网搜索](https://developers.openai.com/api/docs/guides/tools-web-search) · [Claude 联网搜索](https://platform.claude.com/docs/en/agents-and-tools/tool-use/web-search-tool)
 
@@ -45,16 +44,16 @@ OpenAI 模式通过 Responses API 先在指定建筑媒体联网检索，再调�
 | GET /healthz | 进程健康检查 |
 | GET / | 任务书表单 |
 | POST /api/generate | JSON 对象含 brief 字符串，成功返回 deckUrl |
-| GET /deck/:id | 读取本次生成的 HTML，受试用口令保护 |
+| GET /deck/:id | 通过独立链接读取新生成的 HTML |
 | GET /template-preview | 查看原有松阳模板示例 |
 
-报告访问依赖同一试用口令，适用于小范围、可互相共享资料的试用。切勿将 .env、含密钥的旧打包文件或 generated 目录放到 GitHub；密钥曾被分享时到供应商控制台撤销旧值并换新。
+拿到新报告链接的人都可以查看或下载该报告。报告列表仅存在提交者的浏览器中。升级前已保存在磁盘上的报告仍需原有试用口令，生产环境中缺少旧口令时无法访问这些历史报告。切勿将 .env、含密钥的旧打包文件或 generated 目录放到 GitHub；密钥曾被分享时到供应商控制台撤销旧值并换新。
 
 ## 上线验收
 
-1. 在未登录的新窗口打开服务，确认要求试用口令。用 trial 进入后查看松阳示例。
+1. 用无痕窗口打开服务，确认直接显示任务书输入框，点击查看松阳示例。
 2. 用一份可外发的新任务书生成，检查报告标题与任务书一致，四个案例来源可打开，比较和五项策略与本项目有关。
-3. 检查外观、室内、平面切换、缺图说明、最后一页和下载。在新窗口重开报告链接，验证访问控制。
+3. 检查外观、室内、平面切换、缺图说明、最后一页和下载。在另一个无痕窗口打开新报告链接，确认可直接阅读。
 4. 在供应商控制台记录实际耗时与费用。案例关联性、图片类型和文字事实由建筑师按原文抽查。
 
 提交改动前在 server 目录运行 npm ci 和 npm test。测试涉及真实 Express、两个供应商的调用协议、固定模型及网页响应、表单和 iframe。CI 使用相同命令。实际供应商的账号权限、额度和研究质量须用部署环境的 Key 验收。
@@ -65,10 +64,10 @@ OpenAI 模式通过 Responses API 先在指定建筑媒体联网检索，再调�
 
 | 级别 | 状态 | 内容 |
 |---|---|---|
-| P0 | 已处理 | 生产准入、密钥隔离、错误脱敏、来源与跳转限制、输出转义、结构校验、空目录部署、搜索暂停续接 |
+| P0 | 已处理 | 生产密钥配置、公开试用、历史报告保护、错误脱敏、来源与跳转限制、输出转义、结构校验、空目录部署、搜索暂停续接 |
 | P0 | 部署方验收 | 使用新 Key 完成一次真实联网生成并检查账单，在分享服务地址前确认成功 |
 | P1 | 已处理一部分 | 来源回链、真实图片地址和缺图提示已接入。仍需记录媒体访问限制、图文错配及案例质量 |
 | P1 | 试用限制 | 生成中刷新会中止任务，结束后可通过已保存的报告链接重入。临时磁盘的报告应下载 |
 | P2 | 待反馈 | 手机演示排版、逐阶段真实进度、首轮建筑师反馈 |
 
-维护步骤为复现任务、保留去标识化输入、分支修复、运行测试、PR 记录验收。账单或上游异常时检查 Render 服务日志中的状态码与所选 API 平台的用量面板。换 Key 或试用口令后重启服务；健康检查只证明进程可用。回滚可选择上一个已验证的部署版本。
+维护步骤为复现任务、保留去标识化输入、分支修复、运行测试、PR 记录验收。账单或上游异常时检查 Render 服务日志中的状态码与所选 API 平台的用量面板。换 Key 后重启服务；健康检查只证明进程可用。回滚可选择上一个已验证的部署版本。

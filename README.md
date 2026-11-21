@@ -23,7 +23,7 @@ npm test
 |---|---|
 | index.html、01_design_brief.md | 原有静态展示及示例任务书 |
 | server/public/index.html | 任务书输入、生成状态、预览与下载 |
-| server/server.js | Express、试用准入、联网搜索与工具循环、报告保存 |
+| server/server.js | Express、公开试用入口、联网搜索与工具循环、报告保存 |
 | server/model-session.js | OpenAI Responses API、Claude Messages API 两种模型会话 |
 | server/sources.js | 来源检查、项目页面摘录、真实图片地址提取 |
 | server/prompts/system.md | 选例标准、案例分析、五项设计策略、输出结构 |
@@ -32,6 +32,6 @@ npm test
 
 ## 协作分工
 
-产品负责人在 GitHub Issue 写明本轮用户、任务书、预期结果和验收条件。Codex 在分支上实现并测试，将变更和验证结果放入 PR。GitHub 保存源码、Prompt、产品决策、测试与发布版本。真实客户资料、试用口令和 API Key 保存在仓库之外。
+产品负责人在 GitHub Issue 写明本轮用户、任务书、预期结果和验收条件。Codex 在分支上实现并测试，将变更和验证结果放入 PR。GitHub 保存源码、Prompt、产品决策、测试与发布版本。真实客户资料和 API Key 保存在仓库之外。
 
 首轮验收使用一份可外发的真实任务书。请一位建筑师自行提交、检查四个案例及原文、挑出一个能用于本项目的设计动作，并下载 HTML。记录实际耗时、失效图片以及依据不足的判断，用于下一轮选题。

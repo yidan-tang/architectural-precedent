@@ -3,7 +3,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 server = Path(__file__).resolve().parents[1]
 launcher = """import {startTrial} from './test/trial-host.js';
-const h=await startTrial(process.env.BROWSER_TEST_PROVIDER); console.log(JSON.stringify({url:h.url,password:h.password,brief:h.brief}));
+const h=await startTrial(process.env.BROWSER_TEST_PROVIDER); console.log(JSON.stringify({url:h.url,brief:h.brief}));
 process.on('SIGTERM',async()=>{await h.close();process.exit(0)});"""
 app = subprocess.Popen(['node','--input-type=module','-e',launcher],cwd=server,stdout=subprocess.PIPE,text=True)
 try:
@@ -15,7 +15,7 @@ try:
         if os.environ.get('BROWSER_TEST_SINGLE_PROCESS') == '1':
             options['args'] = ['--single-process','--disable-gpu']
         browser = p.chromium.launch(**options)
-        context=browser.new_context(http_credentials={'username':'trial','password':host['password']},accept_downloads=True)
+        context=browser.new_context(accept_downloads=True)
         def external(route):
             if route.request.url.startswith('https://images.adsttc.com/fixture/'):
                 route.fulfill(content_type='image/png',body=base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+tmO0AAAAASUVORK5CYII='))
@@ -44,7 +44,7 @@ try:
         with pg.expect_download() as dl:pg.locator('#download').click()
         assert '深圳社区图书馆' in Path(dl.value.path()).read_text()
         assert not errors,errors
-        print('Chromium',browser.version,'PASS: authentication, sample form, validation failure and retry, 11-page iframe, source links, case carousel, missing images, final takeaway, new window, HTML download.')
+        print('Chromium',browser.version,'PASS: anonymous access, sample form, validation failure and retry, 11-page iframe, source links, case carousel, missing images, final takeaway, new window, HTML download.')
         browser.close()
 finally:
     app.terminate();app.wait(timeout=8)

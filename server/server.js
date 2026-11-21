@@ -29,18 +29,15 @@ const MAX_LOOP_STEPS = 16;
 const MAX_FETCHES = 24;
 const JOB_TIMEOUT_MS = 8 * 60 * 1000;
 const production = process.env.NODE_ENV === 'production';
-const password = process.env.TRIAL_PASSWORD;
 const apiKey = useOpenAI ? openaiKey : anthropicKey;
-if (production && (!apiKey || !password || password.trim().length < 16)) {
-  throw new Error(
-    'Production requires the selected provider API key and TRIAL_PASSWORD (at least 16 characters).',
-  );
-}
+if (production && !apiKey) throw new Error('Production requires the selected provider API key.');
 const outputDir = path.resolve(__dirname, process.env.DECK_DIR || 'generated');
-fs.mkdirSync(outputDir, { recursive: true, mode: 0o700 });
-fs.accessSync(outputDir, fs.constants.W_OK);
+const publicDeckDir = path.join(outputDir, 'public');
+fs.mkdirSync(publicDeckDir, { recursive: true, mode: 0o700 });
+fs.accessSync(publicDeckDir, fs.constants.W_OK);
 const digest = (value) => createHash('sha256').update(value).digest();
-const credentials = password && digest('trial:' + password);
+const legacyPassword = process.env.TRIAL_PASSWORD;
+const legacyCredentials = legacyPassword && digest('trial:' + legacyPassword);
 app.get('/healthz', (_, res) => res.json({ status: 'ok' }));
 app.use((req, res, next) => {
   res.set({
@@ -48,18 +45,7 @@ app.use((req, res, next) => {
     'Referrer-Policy': 'no-referrer',
     'X-Content-Type-Options': 'nosniff',
   });
-  if (!credentials) return next();
-  const [scheme, encoded] = (req.get('authorization') || '').split(' ');
-  if (
-    scheme === 'Basic' &&
-    encoded &&
-    timingSafeEqual(digest(Buffer.from(encoded, 'base64')), credentials)
-  )
-    return next();
-  res
-    .set('WWW-Authenticate', 'Basic realm="Architectural Research Trial", charset="UTF-8"')
-    .status(401)
-    .send('请输入试用用户名和口令。');
+  next();
 });
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
@@ -136,7 +122,7 @@ app.post('/api/generate', async (req, res) => {
           continue;
         }
         const id = 'deck-' + randomUUID();
-        const outFile = path.join(outputDir, id + '.html');
+        const outFile = path.join(publicDeckDir, id + '.html');
         const rendered = renderReport(TEMPLATE, deckData);
         await fs.promises.writeFile(outFile, rendered, { flag: 'wx', mode: 0o600 });
         const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
@@ -225,9 +211,27 @@ app.post('/api/generate', async (req, res) => {
 app.get('/deck/:id', (req, res) => {
   const id = req.params.id;
   if (!/^deck-[a-z0-9-]{1,50}$/.test(id)) return res.sendStatus(404);
-  const filepath = path.join(outputDir, `${id}.html`);
-  if (!fs.existsSync(filepath)) return res.status(404).send('Deck not found');
-  res.sendFile(filepath);
+  const filename = `${id}.html`;
+  const publicFile = path.join(publicDeckDir, filename);
+  if (fs.existsSync(publicFile)) return res.sendFile(publicFile);
+
+  // Reports created before the public trial keep their original access restriction.
+  const legacyFile = path.join(outputDir, filename);
+  if (!fs.existsSync(legacyFile) || (production && !legacyCredentials)) return res.sendStatus(404);
+  if (legacyCredentials) {
+    const [scheme, encoded] = (req.get('authorization') || '').split(' ');
+    if (
+      scheme !== 'Basic' ||
+      !encoded ||
+      !timingSafeEqual(digest(Buffer.from(encoded, 'base64')), legacyCredentials)
+    ) {
+      return res
+        .set('WWW-Authenticate', 'Basic realm="Architectural Research Trial", charset="UTF-8"')
+        .status(401)
+        .send('请输入旧版报告的用户名和口令。');
+    }
+  }
+  res.sendFile(legacyFile);
 });
 
 app.get('/template-preview', (_, res) => {

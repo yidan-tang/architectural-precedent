@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { setTimeout as delay } from 'node:timers/promises';
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 import { JSDOM, ResourceLoader, VirtualConsole } from 'jsdom';
 import { extractPage, fetchPage, pageUrl } from '../sources.js';
 import { readReport, renderReport } from '../report.js';
@@ -41,28 +43,29 @@ test('reports require attributed cases and complete analysis; absent images rema
   assert.ok(html.includes('Art \\u003c Study & $&'));
 });
 
-test('web form, tool loop, 11-page iframe, original sources, retry and protected result', async (t) => {
-  const h = await startTrial();
+test('anonymous web form, tool loop, 11-page iframe, original sources, retry and share link', async (t) => {
+  const h = await startTrial('anthropic', 'existing-trial-fixture');
   t.after(h.close);
-  const headers = { authorization: h.auth };
-  const get = (path) => fetch(h.url + path, { headers });
   const post = (brief) =>
     fetch(h.url + '/api/generate', {
       method: 'POST',
-      headers: { ...headers, 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ brief }),
     });
   assert.equal((await fetch(h.url + '/healthz')).status, 200);
-  assert.equal((await fetch(h.url + '/')).status, 401);
+  const home = await fetch(h.url + '/');
+  assert.equal(home.status, 200);
+  assert.equal(home.headers.get('www-authenticate'), null);
+  assert.equal((await fetch(h.url + '/template-preview')).status, 200);
   assert.equal((await post('')).status, 400);
   assert.equal((await post('x'.repeat(16001))).status, 400);
   assert.equal((await post('invalid')).status, 502);
   h.steps.length = 0;
-  const html = await (await get('/')).text();
+  const html = await home.text();
   class LocalResources extends ResourceLoader {
     fetch(url) {
       if (!url.startsWith(h.url + '/deck/')) return null;
-      return globalThis.fetch(url, { headers }).then(async (r) => Buffer.from(await r.arrayBuffer()));
+      return globalThis.fetch(url).then(async (r) => Buffer.from(await r.arrayBuffer()));
     }
   }
   const errors = [];
@@ -74,8 +77,7 @@ test('web form, tool loop, 11-page iframe, original sources, retry and protected
     resources: new LocalResources(),
     virtualConsole: log,
     beforeParse(window) {
-      window.fetch = (url, init) =>
-        fetch(new URL(url, h.url), { ...init, headers: { ...headers, ...init.headers } });
+      window.fetch = (url, init) => fetch(new URL(url, h.url), init);
     },
   });
   t.after(() => dom.window.close());
@@ -104,8 +106,21 @@ test('web form, tool loop, 11-page iframe, original sources, retry and protected
   assert.equal(deck.querySelector('section.active .tph-cn').textContent, '运营策略');
   assert.equal(doc.querySelector('#download').href, frame.src);
   assert.match(doc.querySelector('#history-list').textContent, /深圳社区图书馆/);
-  assert.equal((await fetch(frame.src)).status, 401);
-  assert.equal((await fetch(frame.src, { headers })).status, 200);
+  assert.equal((await fetch(frame.src)).status, 200);
+});
+
+test('opening the site does not publish existing password-protected reports', async (t) => {
+  for (const password of ['', 'existing-trial-fixture']) {
+    const h = await startTrial('openai', password);
+    t.after(h.close);
+    await writeFile(join(h.deckDir, 'deck-old.html'), 'Protected fixture');
+    const url = h.url + '/deck/deck-old';
+    assert.equal((await fetch(url)).status, password ? 401 : 404);
+    if (password) {
+      const authorization = 'Basic ' + Buffer.from('trial:' + password).toString('base64');
+      assert.equal(await (await fetch(url, { headers: { authorization } })).text(), 'Protected fixture');
+    }
+  }
 });
 
 test('a second simultaneous generation is refused until the current trial finishes', async (t) => {
@@ -114,7 +129,7 @@ test('a second simultaneous generation is refused until the current trial finish
   const generate = (brief) =>
     fetch(h.url + '/api/generate', {
       method: 'POST',
-      headers: { authorization: h.auth, 'content-type': 'application/json' },
+      headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ brief }),
     });
   const pending = generate('slow');
@@ -127,7 +142,7 @@ test('a second simultaneous generation is refused until the current trial finish
 test('OpenAI-only trial searches, fetches, repairs a report and saves its deck', async (t) => {
   const h = await startTrial('openai');
   t.after(h.close);
-  const headers = { authorization: h.auth, 'content-type': 'application/json' };
+  const headers = { 'content-type': 'application/json' };
   const generate = (brief) =>
     fetch(h.url + '/api/generate', { method: 'POST', headers, body: JSON.stringify({ brief }) });
   const ok = await generate('repair');
@@ -138,7 +153,7 @@ test('OpenAI-only trial searches, fetches, repairs a report and saves its deck',
   assert.equal(result.deckData.cases[0].sourceUrl, urls[0]);
   assert.equal(result.stats.estCostUSD, null);
   assert.equal(result.stats.inputTokens, 400);
-  const html = await (await fetch(h.url + result.deckUrl, { headers })).text();
+  const html = await (await fetch(h.url + result.deckUrl)).text();
   assert.match(html, /深圳社区图书馆/);
   for (const brief of ['invalid', 'no-sources', 'incomplete'])
     assert.equal((await generate(brief)).status, 502);

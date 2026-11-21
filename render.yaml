@@ -15,5 +15,3 @@ services:
         value: production
       - key: OPENAI_API_KEY
         sync: false
-      - key: TRIAL_PASSWORD
-        generateValue: true

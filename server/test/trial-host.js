@@ -5,13 +5,12 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
-import { randomUUID } from 'node:crypto';
 import { respondOpenAI } from './openai-fixture.js';
 import { brief, fixtureReport, urls } from './fixtures.js';
 
 const dir = fileURLToPath(new URL('../', import.meta.url));
 
-export async function startTrial(providerName = 'anthropic') {
+export async function startTrial(providerName = 'anthropic', legacyPassword = '') {
   const steps = [];
   const provider = createServer(async (req, res) => {
     const buf = [];
@@ -76,15 +75,15 @@ export async function startTrial(providerName = 'anthropic') {
   provider.listen(0, '127.0.0.1');
   await once(provider, 'listening');
   const dataDir = await mkdtemp(join(tmpdir(), 'architect-reports-'));
-  const trialPassword = randomUUID();
+  const deckDir = join(dataDir, 'decks');
   const app = spawn(process.execPath, ['--import', './test/publisher-fixture.js', 'server.js'], {
     cwd: dir,
     env: {
       ...process.env,
       PORT: '0',
       NODE_ENV: 'production',
-      TRIAL_PASSWORD: trialPassword,
-      DECK_DIR: join(dataDir, 'decks'),
+      TRIAL_PASSWORD: legacyPassword,
+      DECK_DIR: deckDir,
       AI_PROVIDER: '',
       OPENAI_API_KEY: providerName === 'openai' ? 'local-openai-fixture' : '',
       ANTHROPIC_API_KEY: providerName === 'anthropic' ? 'local-test-only' : '',
@@ -119,8 +118,7 @@ export async function startTrial(providerName = 'anthropic') {
     });
     return {
       url: 'http://127.0.0.1:' + port,
-      auth: 'Basic ' + Buffer.from('trial:' + trialPassword).toString('base64'),
-      password: trialPassword,
+      deckDir,
       brief,
       steps,
       close,

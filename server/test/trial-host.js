@@ -6,16 +6,21 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { once } from 'node:events';
 import { randomUUID } from 'node:crypto';
+import { respondOpenAI } from './openai-fixture.js';
 import { brief, fixtureReport, urls } from './fixtures.js';
 
 const dir = fileURLToPath(new URL('../', import.meta.url));
 
-export async function startTrial() {
+export async function startTrial(providerName = 'anthropic') {
   const steps = [];
   const provider = createServer(async (req, res) => {
     const buf = [];
     for await (const part of req) buf.push(part);
     const request = JSON.parse(Buffer.concat(buf));
+    if (req.url === '/v1/responses') {
+      steps.push(request.input.length);
+      return respondOpenAI(request, req.headers.authorization === 'Bearer local-openai-fixture', res);
+    }
     const messages = request.messages;
     const first = messages[0].content;
     steps.push(messages.length);
@@ -80,7 +85,10 @@ export async function startTrial() {
       NODE_ENV: 'production',
       TRIAL_PASSWORD: trialPassword,
       DECK_DIR: join(dataDir, 'decks'),
-      ANTHROPIC_API_KEY: 'local-test-only',
+      AI_PROVIDER: '',
+      OPENAI_API_KEY: providerName === 'openai' ? 'local-openai-fixture' : '',
+      ANTHROPIC_API_KEY: providerName === 'anthropic' ? 'local-test-only' : '',
+      TEST_PROVIDER_URL: 'http://127.0.0.1:' + provider.address().port,
       ANTHROPIC_BASE_URL: 'http://127.0.0.1:' + provider.address().port,
     },
     stdio: ['ignore', 'pipe', 'inherit'],

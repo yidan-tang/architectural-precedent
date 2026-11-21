@@ -13,7 +13,7 @@ services:
         value: "22"
       - key: NODE_ENV
         value: production
-      - key: ANTHROPIC_API_KEY
+      - key: OPENAI_API_KEY
         sync: false
       - key: TRIAL_PASSWORD
         generateValue: true

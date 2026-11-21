@@ -123,3 +123,30 @@ test('a second simultaneous generation is refused until the current trial finish
   assert.equal((await pending).status, 200);
   assert.equal((await generate(h.brief)).status, 200);
 });
+
+test('OpenAI-only trial searches, fetches, repairs a report and saves its deck', async (t) => {
+  const h = await startTrial('openai');
+  t.after(h.close);
+  const headers = { authorization: h.auth, 'content-type': 'application/json' };
+  const generate = (brief) =>
+    fetch(h.url + '/api/generate', { method: 'POST', headers, body: JSON.stringify({ brief }) });
+  const ok = await generate('repair');
+  assert.equal(ok.status, 200);
+  const result = await ok.json();
+  assert.equal(result.deckData.cases.length, 4);
+  assert.equal(result.deckData.cases[0].images[0].url, photo);
+  assert.equal(result.deckData.cases[0].sourceUrl, urls[0]);
+  assert.equal(result.stats.estCostUSD, null);
+  assert.equal(result.stats.inputTokens, 400);
+  const html = await (await fetch(h.url + result.deckUrl, { headers })).text();
+  assert.match(html, /深圳社区图书馆/);
+  for (const brief of ['invalid', 'no-sources', 'incomplete'])
+    assert.equal((await generate(brief)).status, 502);
+  const failed = await generate('bad-key');
+  assert.equal(failed.status, 503);
+  assert.deepEqual(await failed.json(), { error: '模型服务鉴权失败，请联系试用负责人检查配置。' });
+  const quota = await generate('quota');
+  assert.equal(quota.status, 503);
+  assert.match((await quota.json()).error, /额度/);
+  assert.equal((await generate(h.brief)).status, 200);
+});

@@ -3,7 +3,7 @@ from pathlib import Path
 from playwright.sync_api import sync_playwright, expect
 server = Path(__file__).resolve().parents[1]
 launcher = """import {startTrial} from './test/trial-host.js';
-const h=await startTrial(); console.log(JSON.stringify({url:h.url,password:h.password,brief:h.brief}));
+const h=await startTrial(process.env.BROWSER_TEST_PROVIDER); console.log(JSON.stringify({url:h.url,password:h.password,brief:h.brief}));
 process.on('SIGTERM',async()=>{await h.close();process.exit(0)});"""
 app = subprocess.Popen(['node','--input-type=module','-e',launcher],cwd=server,stdout=subprocess.PIPE,text=True)
 try:

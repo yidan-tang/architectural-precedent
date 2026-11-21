@@ -1,4 +1,4 @@
-const PUBLISHERS = ['archdaily.com', 'archdaily.cn', 'dezeen.com', 'gooood.cn'];
+export const PUBLISHERS = ['archdaily.com', 'archdaily.cn', 'dezeen.com', 'gooood.cn'];
 const PAGE_HOSTS = new Set(PUBLISHERS.flatMap((host) => [host, 'www.' + host]));
 const IMAGE_HOSTS = new Set([...PAGE_HOSTS, 'images.adsttc.com', 'static.dezeen.com', 'oss.gooood.cn']);
 

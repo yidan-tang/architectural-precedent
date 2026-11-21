@@ -6,7 +6,7 @@
 
 ## 本地启动
 
-需要 Node.js 22 或更高版本，以及有 Claude 模型与联网搜索权限的 Anthropic API 项目。
+需要 Node.js 22 或更高版本，以及有模型与联网搜索权限的 OpenAI API 项目（或原有的 Anthropic API 项目）。
 
 ~~~bash
 cd server
@@ -15,7 +15,7 @@ cp .env.example .env
 npm test
 ~~~
 
-在本机编辑 server/.env，把新创建的 API Key 填入 ANTHROPIC_API_KEY，再运行 npm start。打开 http://127.0.0.1:3000 。没有 Key 时仍可在首页点「查看松阳示例」。本地模式只监听回环地址。
+在本机编辑 server/.env，把 OpenAI 平台密钥填入 OPENAI_API_KEY（使用 Claude 时填 ANTHROPIC_API_KEY），再运行 npm start。打开 http://127.0.0.1:3000 。没有 Key 时仍可在首页点「查看松阳示例」。本地模式只监听回环地址。
 
 ## 项目入口
 
@@ -23,7 +23,8 @@ npm test
 |---|---|
 | index.html、01_design_brief.md | 原有静态展示及示例任务书 |
 | server/public/index.html | 任务书输入、生成状态、预览与下载 |
-| server/server.js | Express、试用准入、Claude 搜索与工具循环、报告保存 |
+| server/server.js | Express、试用准入、联网搜索与工具循环、报告保存 |
+| server/model-session.js | OpenAI Responses API、Claude Messages API 两种模型会话 |
 | server/sources.js | 来源检查、项目页面摘录、真实图片地址提取 |
 | server/prompts/system.md | 选例标准、案例分析、五项设计策略、输出结构 |
 | server/report.js、server/template.html | 验证报告，渲染原有双语版式和轮播 |

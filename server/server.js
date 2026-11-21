@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 
 import { randomUUID, createHash, timingSafeEqual } from 'node:crypto';
 import { fetchPage, pageUrl } from './sources.js';
+import { claudeSession, openaiSession } from './model-session.js';
 import { readReport, renderReport } from './report.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -14,16 +15,26 @@ dotenv.config({ path: path.join(__dirname, '.env') });
 const app = express();
 app.disable('x-powered-by');
 const PORT = Number(process.env.PORT || 3000);
-const MODEL = process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
+const openaiKey = process.env.OPENAI_API_KEY?.trim();
+const anthropicKey = process.env.ANTHROPIC_API_KEY?.trim();
+const provider = process.env.AI_PROVIDER || (openaiKey ? 'openai' : 'anthropic');
+if (!['openai', 'anthropic'].includes(provider))
+  throw new Error('AI_PROVIDER must be openai or anthropic.');
+const useOpenAI = provider === 'openai';
+const MODEL = useOpenAI
+  ? process.env.OPENAI_MODEL || 'gpt-5.4-mini'
+  : process.env.ANTHROPIC_MODEL || 'claude-sonnet-4-6';
 const MAX_TOKENS = 16000;
 const MAX_LOOP_STEPS = 16;
 const MAX_FETCHES = 24;
 const JOB_TIMEOUT_MS = 8 * 60 * 1000;
 const production = process.env.NODE_ENV === 'production';
 const password = process.env.TRIAL_PASSWORD;
-const apiKey = process.env.ANTHROPIC_API_KEY;
+const apiKey = useOpenAI ? openaiKey : anthropicKey;
 if (production && (!apiKey || !password || password.trim().length < 16)) {
-  throw new Error('Production requires ANTHROPIC_API_KEY and TRIAL_PASSWORD (at least 16 characters).');
+  throw new Error(
+    'Production requires the selected provider API key and TRIAL_PASSWORD (at least 16 characters).',
+  );
 }
 const outputDir = path.resolve(__dirname, process.env.DECK_DIR || 'generated');
 fs.mkdirSync(outputDir, { recursive: true, mode: 0o700 });
@@ -52,7 +63,8 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
-const client = apiKey && new Anthropic({ apiKey, maxRetries: 0, timeout: JOB_TIMEOUT_MS });
+const claudeClient =
+  !useOpenAI && apiKey && new Anthropic({ apiKey, maxRetries: 0, timeout: JOB_TIMEOUT_MS });
 let busy = false;
 const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, 'prompts/system.md'), 'utf-8');
 const TEMPLATE = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf-8');
@@ -61,7 +73,7 @@ app.post('/api/generate', async (req, res) => {
   const brief = typeof req.body?.brief === 'string' ? req.body.brief.trim() : '';
   if (!brief || brief.length > 16000)
     return res.status(400).json({ error: '请输入 1–16,000 字的设计任务书。' });
-  if (!client) return res.status(503).json({ error: '生成服务尚未配置，请联系试用负责人。' });
+  if (!apiKey) return res.status(503).json({ error: '生成服务尚未配置，请联系试用负责人。' });
   if (busy) return res.status(429).json({ error: '已有任务正在生成，请稍后再试。' });
   busy = true;
   const abort = new AbortController();
@@ -72,83 +84,55 @@ app.post('/api/generate', async (req, res) => {
   res.on('close', disconnect);
   const startTime = Date.now();
   const evidence = { pages: new Map(), search: new Set() };
+  const attemptedPages = new Set();
   let fetches = 0;
   let repaired = false;
   try {
-    const tools = [
-      {
-        type: 'web_search_20250305',
-        name: 'web_search',
-        max_uses: 12,
-        allowed_domains: ['archdaily.com', 'archdaily.cn', 'gooood.cn', 'dezeen.com'],
-      },
-      {
-        name: 'web_fetch',
-        description:
-          'Read a project article from ArchDaily, Dezeen or gooood. Returns sourceUrl, article excerpt and actual image URLs with captions when available.',
-        input_schema: {
-          type: 'object',
-          properties: {
-            url: { type: 'string', description: 'Full URL to fetch (https://...)' },
-          },
-          required: ['url'],
-        },
-      },
-    ];
-
-    const messages = [{ role: 'user', content: brief }];
+    const options = {
+      model: MODEL,
+      prompt: SYSTEM_PROMPT,
+      brief,
+      signal: abort.signal,
+      maxTokens: MAX_TOKENS,
+    };
+    const session = useOpenAI
+      ? openaiSession({ ...options, apiKey })
+      : claudeSession({ ...options, client: claudeClient });
     let totalInputTokens = 0;
     let totalOutputTokens = 0;
     const steps = [];
 
     for (let step = 1; step <= MAX_LOOP_STEPS; step++) {
-      const response = await client.messages.create(
-        {
-          model: MODEL,
-          max_tokens: MAX_TOKENS,
-          system: SYSTEM_PROMPT,
-          tools,
-          messages,
-        },
-        { signal: abort.signal },
-      );
-
-      totalInputTokens += response.usage.input_tokens;
-      totalOutputTokens += response.usage.output_tokens;
-
-      const toolUses = response.content.filter((b) => b.type === 'tool_use');
-      const textBlocks = response.content.filter((b) => b.type === 'text');
-      for (const block of response.content) {
-        if (block.type !== 'web_search_tool_result' || !Array.isArray(block.content)) continue;
-        for (const result of block.content) {
-          const source = pageUrl(result.url);
-          if (source) evidence.search.add(source);
-        }
+      const turn = await session.next();
+      totalInputTokens += turn.inputTokens;
+      totalOutputTokens += turn.outputTokens;
+      for (const raw of turn.sources) {
+        const source = pageUrl(raw);
+        if (source) evidence.search.add(source);
       }
-      steps.push({ step, stop_reason: response.stop_reason, tools: toolUses.map((t) => t.name) });
-
-      if (response.stop_reason === 'end_turn' || response.stop_reason === 'stop_sequence') {
-        const finalText = textBlocks.map((b) => b.text).join('');
+      const toolUses = turn.calls;
+      steps.push({ step, stop_reason: turn.stop, tools: toolUses.map((t) => t.name) });
+      if (turn.stop === 'end_turn' || turn.stop === 'stop_sequence') {
         let deckData;
         try {
           if (!evidence.search.size)
             throw new Error('Use web_search to obtain supported project sources');
-          deckData = readReport(finalText, evidence);
+          deckData = readReport(turn.text, evidence);
+          if (
+            useOpenAI &&
+            deckData.cases.some((c) => !c.sourceRead && !attemptedPages.has(c.sourceUrl))
+          ) {
+            throw new Error(
+              'Call web_fetch on every selected project article before composing the report.',
+            );
+          }
         } catch (error) {
           if (repaired)
-            return res
-              .status(502)
-              .json({
-                error: '未取得足够可追溯的案例或完整分析。请检查联网搜索权限，或调整任务书后重试。',
-              });
+            return res.status(502).json({
+              error: '未取得足够可追溯的案例或完整分析。请检查联网搜索权限，或调整任务书后重试。',
+            });
           repaired = true;
-          messages.push(
-            { role: 'assistant', content: response.content },
-            {
-              role: 'user',
-              content: 'Correct the report and return the entire deck-data JSON. ' + error.message,
-            },
-          );
+          session.repair('Correct the report and return the entire deck-data JSON. ' + error.message);
           continue;
         }
         const id = 'deck-' + randomUUID();
@@ -167,18 +151,14 @@ app.post('/api/generate', async (req, res) => {
             elapsedSec: Number(elapsed),
             inputTokens: totalInputTokens,
             outputTokens: totalOutputTokens,
-            estCostUSD: MODEL === 'claude-sonnet-4-6' ? Number(cost) : null,
+            estCostUSD: !useOpenAI && MODEL === 'claude-sonnet-4-6' ? Number(cost) : null,
             steps,
           },
         });
       }
 
-      if (response.stop_reason === 'pause_turn') {
-        messages.push({ role: 'assistant', content: response.content });
-        continue;
-      }
-
-      if (response.stop_reason === 'tool_use' && toolUses.length) {
+      if (turn.stop === 'pause_turn') continue;
+      if (turn.stop === 'tool_use' && toolUses.length) {
         const toolResults = [];
         for (const use of toolUses) {
           let content = 'Unsupported tool or URL.';
@@ -189,6 +169,7 @@ app.post('/api/generate', async (req, res) => {
               let page = evidence.pages.get(url);
               if (!page) {
                 if (++fetches > MAX_FETCHES) throw new Error('Fetch budget reached');
+                attemptedPages.add(url);
                 page = await fetchPage(url, abort.signal);
                 evidence.pages.set(url, page);
                 evidence.pages.set(page.url, page);
@@ -206,12 +187,9 @@ app.post('/api/generate', async (req, res) => {
                 'Project page unavailable. Choose another result or cite the search result and leave image URLs empty.';
             }
           }
-          toolResults.push({ type: 'tool_result', tool_use_id: use.id, content, is_error: failed });
+          toolResults.push({ id: use.id, content, failed });
         }
-        messages.push(
-          { role: 'assistant', content: response.content },
-          { role: 'user', content: toolResults },
-        );
+        session.submit(toolResults);
         continue;
       }
       return res.status(502).json({ error: '模型未完成汇报。请缩短任务书或稍后重试。' });
@@ -225,15 +203,15 @@ app.post('/api/generate', async (req, res) => {
       category: timedOut ? 'timeout' : 'upstream-or-storage',
       status: Number(error.status) || null,
     });
-    return res
-      .status(timedOut ? 504 : 503)
-      .json({
-        error: timedOut
-          ? '生成超时，请稍后重试。'
-          : configError
-            ? '模型服务鉴权失败，请联系试用负责人检查配置。'
+    return res.status(timedOut ? 504 : 503).json({
+      error: timedOut
+        ? '生成超时，请稍后重试。'
+        : configError
+          ? '模型服务鉴权失败，请联系试用负责人检查配置。'
+          : error.status === 429
+            ? '模型服务额度不足或请求过于频繁，请联系试用负责人检查 API 额度后重试。'
             : '生成服务暂不可用，请联系试用负责人检查模型额度、联网和报告存储。',
-      });
+    });
   } finally {
     clearTimeout(timeout);
     res.off('close', disconnect);
@@ -260,16 +238,14 @@ app.get('/template-preview', (_, res) => {
 app.use((error, req, res, next) => {
   if (res.headersSent) return next(error);
   const status = error.status === 413 ? 413 : error.status === 400 ? 400 : 500;
-  res
-    .status(status)
-    .json({
-      error:
-        status === 413
-          ? '任务书过长，请精简后重试。'
-          : status === 400
-            ? '请求格式无效。'
-            : '服务暂不可用。',
-    });
+  res.status(status).json({
+    error:
+      status === 413
+        ? '任务书过长，请精简后重试。'
+        : status === 400
+          ? '请求格式无效。'
+          : '服务暂不可用。',
+  });
 });
 
 const server = app.listen(PORT, production ? '0.0.0.0' : '127.0.0.1', () => {

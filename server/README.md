@@ -6,7 +6,11 @@
 
 ## Render Web Service
 
-将本版本所在分支推到 GitHub，在 Render 新建一个 Node Web Service 并选择仓库和该分支。每项按下表填写。
+首轮试用可以直接[在 Render 部署试用分支](https://render.com/deploy?repo=https://github.com/yidan-tang/architectural-precedent/tree/trial/copilot-mvp)。登录自己的 Render 工作区，在部署预览中确认只有一个 Free Web Service，将新 Key 填入 `ANTHROPIC_API_KEY` 后确认部署。Render 会生成 `TRIAL_PASSWORD`；部署完成后，在服务的 Environment 页面查看该值，单独发给试用者。试用用户名为 `trial`。
+
+此配置使用临时磁盘，生成后请下载 HTML。Claude 联网生成按 Anthropic 账号用量计费。试用期间手动发布新版本，避免朋友演示时自动重启服务。
+
+如需手动创建 Web Service，选择仓库和试用分支，并填写以下设置。
 
 | 设置 | 值 |
 |---|---|

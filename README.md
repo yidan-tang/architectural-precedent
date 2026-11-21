@@ -2,7 +2,7 @@
 
 面向建筑师的前期案例研究工具。粘贴中英文设计任务书，生成一份可翻页、可下载的 HTML 汇报，包含封面、四个案例、横向对比和五项设计策略。案例页可切换外观、室内、平面三个分析视角并打开原文。
 
-[浏览原有松阳示例](https://yidan-tang.github.io/architectural-precedent/) · [部署、验收与维护](server/README.md)
+[浏览原有松阳示例](https://yidan-tang.github.io/architectural-precedent/) · [在 Render 部署试用分支](https://render.com/deploy?repo=https://github.com/yidan-tang/architectural-precedent/tree/trial/copilot-mvp) · [部署、验收与维护](server/README.md)
 
 ## 本地启动
 

@@ -13,12 +13,17 @@ const parameters = {
 };
 
 // Each generation gets its own conversation. The server handles research and rendering for both APIs.
-export function claudeSession({ client, model, prompt, brief, signal, maxTokens }) {
+export function claudeSession({ client, model, prompt, brief, signal, maxTokens, searchOnlyDomains }) {
   const messages = [{ role: 'user', content: brief }];
   const tools = [
-    { type: 'web_search_20250305', name: 'web_search', max_uses: 12, allowed_domains: PUBLISHERS },
-    { ...pageTool, input_schema: parameters },
+    {
+      type: 'web_search_20250305',
+      name: 'web_search',
+      max_uses: searchOnlyDomains ? 5 : 12,
+      allowed_domains: searchOnlyDomains ?? PUBLISHERS,
+    },
   ];
+  if (!searchOnlyDomains) tools.push({ ...pageTool, input_schema: parameters });
   return {
     async next() {
       const r = await client.messages.create(
@@ -28,6 +33,7 @@ export function claudeSession({ client, model, prompt, brief, signal, maxTokens 
       messages.push({ role: 'assistant', content: r.content });
       return {
         stop: r.stop_reason,
+        searched: r.content.some((b) => b.type === 'web_search_tool_result' && Array.isArray(b.content)),
         text: r.content
           .filter((b) => b.type === 'text')
           .map((b) => b.text)
@@ -57,12 +63,10 @@ export function claudeSession({ client, model, prompt, brief, signal, maxTokens 
   };
 }
 
-export function openaiSession({ apiKey, model, prompt, brief, signal, maxTokens }) {
+export function openaiSession({ apiKey, model, prompt, brief, signal, maxTokens, searchOnlyDomains }) {
   const input = [{ role: 'user', content: brief }];
-  const tools = [
-    { type: 'web_search', filters: { allowed_domains: PUBLISHERS } },
-    { type: 'function', ...pageTool, parameters, strict: true },
-  ];
+  const tools = [{ type: 'web_search', filters: { allowed_domains: searchOnlyDomains ?? PUBLISHERS } }];
+  if (!searchOnlyDomains) tools.push({ type: 'function', ...pageTool, parameters, strict: true });
   return {
     async next() {
       const searchFirst = input.length === 1;
@@ -74,15 +78,17 @@ export function openaiSession({ apiKey, model, prompt, brief, signal, maxTokens 
         body: JSON.stringify({
           model,
           store: false,
-          instructions: searchFirst
-            ? prompt + '\nFor this first search turn, identify candidate project articles and return a short list of titles and exact URLs. The next turn will fetch articles before writing the report.'
-            : prompt,
+          instructions:
+            searchFirst && !searchOnlyDomains
+              ? prompt +
+                '\nFor this first search turn, identify candidate project articles and return a short list of titles and exact URLs. The next turn will fetch articles before writing the report.'
+              : prompt,
           input,
           tools: searchFirst ? [tools[0]] : tools,
           include: ['web_search_call.action.sources', 'reasoning.encrypted_content'],
           tool_choice: searchFirst ? 'required' : 'auto',
           max_output_tokens: maxTokens,
-          max_tool_calls: 12,
+          max_tool_calls: searchOnlyDomains ? 5 : 12,
         }),
       });
       if (!http.ok) {
@@ -120,7 +126,7 @@ export function openaiSession({ apiKey, model, prompt, brief, signal, maxTokens 
       }
       let stop = r.status;
       if (stop === 'completed') stop = calls.length ? 'tool_use' : 'end_turn';
-      if (searchFirst && stop === 'end_turn') {
+      if (searchFirst && !searchOnlyDomains && stop === 'end_turn') {
         input.push({
           role: 'user',
           content:
@@ -130,6 +136,7 @@ export function openaiSession({ apiKey, model, prompt, brief, signal, maxTokens 
       }
       return {
         stop,
+        searched: output.some((item) => item.type === 'web_search_call' && item.status === 'completed'),
         calls,
         sources,
         text: texts.join(''),

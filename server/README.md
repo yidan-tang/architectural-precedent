@@ -44,10 +44,14 @@ OpenAI 模式通过 Responses API 先在指定建筑媒体联网检索，再调�
 | GET /healthz | 进程健康检查 |
 | GET / | 任务书表单 |
 | POST /api/generate | JSON 对象含 brief 字符串，成功返回 deckUrl |
+| GET /api/urban-study/status | 返回当前模型配置是否含 Key。此检查不调用模型。 |
+| POST /api/urban-study | 提交 intent 字符串（1–1,800 字），可带匿名 siteContext（最多 900 字）。返回三条带来源的 cases 与对应的三项 schemes。 |
 | GET /deck/:id | 通过独立链接读取新生成的 HTML |
 | GET /template-preview | 查看原有松阳模板示例 |
 
 拿到新报告链接的人都可以查看或下载该报告。报告列表仅存在提交者的浏览器中。升级前已保存在磁盘上的报告仍需原有试用口令，生产环境中缺少旧口令时无法访问这些历史报告。切勿将 .env、含密钥的旧打包文件或 generated 目录放到 GitHub；密钥曾被分享时到供应商控制台撤销旧值并换新。
+
+城市设计研究接口可供独立演示页跨域调用。环境变量 `URBAN_REVIEW_ORIGIN` 指定一个完整浏览器来源，例如 `https://review.example.org`。跨域请求无需凭据，设置为一个精确来源后只对上述两条接口生效。该接口与生成报告共用并发限制。浏览器可以先读取 status，仅在使用者选择实时研究后再提交意图与场地信息；这些信息将发送给服务端配置的模型供应商。
 
 ## 上线验收
 

@@ -10,12 +10,18 @@ import { brief, fixtureReport, urls } from './fixtures.js';
 
 const dir = fileURLToPath(new URL('../', import.meta.url));
 
-export async function startTrial(providerName = 'anthropic', legacyPassword = '') {
+export async function startTrial(
+  providerName = 'anthropic',
+  legacyPassword = '',
+  providerHandler,
+  reviewOrigin = '',
+) {
   const steps = [];
   const provider = createServer(async (req, res) => {
     const buf = [];
     for await (const part of req) buf.push(part);
     const request = JSON.parse(Buffer.concat(buf));
+    if (providerHandler && (await providerHandler(req.url, request, res))) return;
     if (req.url === '/v1/responses') {
       steps.push(request.input.length);
       return respondOpenAI(request, req.headers.authorization === 'Bearer local-openai-fixture', res);
@@ -81,7 +87,8 @@ export async function startTrial(providerName = 'anthropic', legacyPassword = ''
     env: {
       ...process.env,
       PORT: '0',
-      NODE_ENV: 'production',
+      NODE_ENV: providerName === 'unconfigured' ? 'development' : 'production',
+      URBAN_REVIEW_ORIGIN: reviewOrigin || undefined,
       TRIAL_PASSWORD: legacyPassword,
       DECK_DIR: deckDir,
       AI_PROVIDER: '',

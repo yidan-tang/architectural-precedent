@@ -9,6 +9,7 @@ import { randomUUID, createHash, timingSafeEqual } from 'node:crypto';
 import { fetchPage, pageUrl } from './sources.js';
 import { claudeSession, openaiSession } from './model-session.js';
 import { readReport, renderReport } from './report.js';
+import { urbanStudy, UrbanEvidenceError } from './urban-study.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 dotenv.config({ path: path.join(__dirname, '.env') });
@@ -47,6 +48,39 @@ app.use((req, res, next) => {
   });
   next();
 });
+const reviewOrigin =
+  process.env.URBAN_REVIEW_ORIGIN ?? 'https://zhongshan-urban-study.esteemedbeech.chatgpt.site';
+app.all(['/api/urban-study', '/api/urban-study/status'], (req, res, next) => {
+  res.vary('Origin');
+  const origin = req.get('Origin');
+  const method = req.path.replace(/\/$/, '').endsWith('/status') ? 'GET' : 'POST';
+  if (origin) {
+    if (origin === reviewOrigin && /^https?:\/\/[^\s/*]+$/.test(reviewOrigin)) {
+      res.set('Access-Control-Allow-Origin', reviewOrigin);
+    } else {
+      // Render terminates HTTPS upstream, so req.protocol may be HTTP behind its proxy.
+      const host = req.get('Host');
+      if (origin !== `https://${host}` && origin !== `${req.protocol}://${host}`)
+        return res.sendStatus(403);
+    }
+  }
+  if (req.method === 'OPTIONS') {
+    if (!origin || req.get('Access-Control-Request-Method') !== method) return res.sendStatus(405);
+    const headers = (req.get('Access-Control-Request-Headers') || '')
+      .toLowerCase()
+      .split(',')
+      .map((h) => h.trim())
+      .filter(Boolean);
+    if (headers.some((header) => method !== 'POST' || header !== 'content-type'))
+      return res.sendStatus(403);
+    res.set('Access-Control-Allow-Methods', method);
+    if (method === 'POST') res.set('Access-Control-Allow-Headers', 'Content-Type');
+    return res.status(204).end();
+  }
+  if (req.method !== method) return res.sendStatus(405);
+  next();
+});
+app.get('/api/urban-study/status', (_, res) => res.json({ available: Boolean(apiKey) }));
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 // The browser reads local documents. Serve only the parser and font assets it needs.
@@ -66,15 +100,26 @@ let busy = false;
 const SYSTEM_PROMPT = fs.readFileSync(path.join(__dirname, 'prompts/system.md'), 'utf-8');
 const TEMPLATE = fs.readFileSync(path.join(__dirname, 'template.html'), 'utf-8');
 
-app.post('/api/generate', async (req, res) => {
-  const brief = typeof req.body?.brief === 'string' ? req.body.brief.trim() : '';
+app.post(['/api/generate', '/api/urban-study'], async (req, res) => {
+  const urban = req.path.replace(/\/$/, '') === '/api/urban-study';
+  const input = urban ? req.body?.intent : req.body?.brief;
+  const brief = typeof input === 'string' ? input.trim() : '';
+  if (urban && (!brief || brief.length > 1800))
+    return res.status(400).json({ error: '请用 1–1,800 字写下本轮设计意图。' });
+  const siteContext = req.body?.siteContext;
+  if (
+    urban &&
+    siteContext !== undefined &&
+    (typeof siteContext !== 'string' || siteContext.length > 900)
+  )
+    return res.status(400).json({ error: '场地说明须为不超过 900 字的文字。' });
   if (!brief || brief.length > 16000)
     return res.status(400).json({ error: '请输入 1–16,000 字的设计任务书。' });
   if (!apiKey) return res.status(503).json({ error: '生成服务尚未配置，请联系试用负责人。' });
   if (busy) return res.status(429).json({ error: '已有任务正在生成，请稍后再试。' });
   busy = true;
   const abort = new AbortController();
-  const timeout = setTimeout(() => abort.abort(), JOB_TIMEOUT_MS);
+  const timeout = setTimeout(() => abort.abort(), urban ? 150000 : JOB_TIMEOUT_MS);
   const disconnect = () => {
     if (!res.writableEnded) abort.abort();
   };
@@ -85,6 +130,18 @@ app.post('/api/generate', async (req, res) => {
   let fetches = 0;
   let repaired = false;
   try {
+    if (urban) {
+      const study = await urbanStudy({
+        intent: brief,
+        siteContext: siteContext?.trim(),
+        model: MODEL,
+        useOpenAI,
+        apiKey,
+        client: claudeClient,
+        signal: abort.signal,
+      });
+      return res.json(study);
+    }
     const options = {
       model: MODEL,
       prompt: SYSTEM_PROMPT,
@@ -194,6 +251,11 @@ app.post('/api/generate', async (req, res) => {
     return res.status(502).json({ error: '已达到本次研究轮次上限。请缩小项目范围后重试。' });
   } catch (error) {
     if (res.destroyed) return;
+    if (error instanceof UrbanEvidenceError) {
+      return res
+        .status(502)
+        .json({ error: '本轮未取得三个可追溯的案例与完整构想。可以调整意图后重试。' });
+    }
     const timedOut = abort.signal.aborted || error.name === 'APIConnectionTimeoutError';
     const configError = [401, 403].includes(error.status);
     console.warn('Generation failed', {

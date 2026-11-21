@@ -1,5 +1,6 @@
 import base64, json, os, subprocess
 from pathlib import Path
+from brief_upload import check_uploads
 from playwright.sync_api import sync_playwright, expect
 server = Path(__file__).resolve().parents[1]
 launcher = """import {startTrial} from './test/trial-host.js';
@@ -26,7 +27,7 @@ try:
         assert '陈家铺' in pg.locator('#brief').input_value()
         pg.locator('#brief').fill('invalid');pg.locator('#submit-btn').click()
         expect(pg.get_by_role('alert')).to_contain_text('未取得足够')
-        pg.locator('#brief').fill(host['brief']);pg.locator('#submit-btn').click()
+        check_uploads(pg, host)
         frame=pg.frame_locator('#preview')
         expect(frame.locator('h1')).to_have_text('深圳社区图书馆')
         expect(frame.locator('.source-link')).to_have_count(4)
@@ -44,7 +45,7 @@ try:
         with pg.expect_download() as dl:pg.locator('#download').click()
         assert '深圳社区图书馆' in Path(dl.value.path()).read_text()
         assert not errors,errors
-        print('Chromium',browser.version,'PASS: anonymous access, sample form, validation failure and retry, 11-page iframe, source links, case carousel, missing images, final takeaway, new window, HTML download.')
+        print('Chromium',browser.version,'PASS: anonymous access, DOCX/PDF/TXT/MD import and editing, sample form, validation failure and retry, 11-page iframe, source links, case carousel, missing images, final takeaway, new window, HTML download.')
         browser.close()
 finally:
     app.terminate();app.wait(timeout=8)

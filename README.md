@@ -1,12 +1,12 @@
 # Architectural Research Copilot
 
-面向建筑师的前期案例研究工具。粘贴中英文设计任务书，生成一份可翻页、可下载的 HTML 汇报，包含封面、四个案例、横向对比和五项设计策略。案例页可切换外观、室内、平面三个分析视角并打开原文。
+面向建筑师的前期案例研究工具。上传 Word（.docx）、文字版 PDF、TXT 或 Markdown 文件，也可直接粘贴中英文设计任务书。核对正文后，生成一份可翻页、可下载的 HTML 汇报，包含封面、四个案例、横向对比和五项设计策略。案例页可切换外观、室内、平面三个分析视角并打开原文。
 
 [浏览原有松阳示例](https://yidan-tang.github.io/architectural-precedent/) · [在 Render 部署试用分支](https://render.com/deploy?repo=https://github.com/yidan-tang/architectural-precedent/tree/trial/copilot-mvp) · [部署、验收与维护](server/README.md)
 
 ## 本地启动
 
-需要 Node.js 22 或更高版本，以及有模型与联网搜索权限的 OpenAI API 项目（或原有的 Anthropic API 项目）。
+需要 Node.js 22.13 或更高版本，以及有模型与联网搜索权限的 OpenAI API 项目（或原有的 Anthropic API 项目）。
 
 ~~~bash
 cd server

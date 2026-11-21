@@ -49,6 +49,17 @@ app.use((req, res, next) => {
 });
 app.use(express.json({ limit: '100kb' }));
 app.use(express.static(path.join(__dirname, 'public')));
+// The browser reads local documents. Serve only the parser and font assets it needs.
+const pdfAssets = path.dirname(fileURLToPath(import.meta.resolve('pdfjs-dist/package.json')));
+for (const name of ['pdf.min.mjs', 'pdf.worker.min.mjs']) {
+  app.get('/vendor/pdf/' + name, (_, res) => res.sendFile(path.join(pdfAssets, 'legacy/build', name)));
+}
+for (const dir of ['cmaps', 'standard_fonts']) {
+  app.use('/vendor/pdf/' + dir, express.static(path.join(pdfAssets, dir)));
+}
+app.get('/vendor/fflate.js', (_, res) =>
+  res.sendFile(fileURLToPath(import.meta.resolve('fflate/browser'))),
+);
 const claudeClient =
   !useOpenAI && apiKey && new Anthropic({ apiKey, maxRetries: 0, timeout: JOB_TIMEOUT_MS });
 let busy = false;

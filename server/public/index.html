@@ -137,6 +137,19 @@
     outline:none;
     border-color:var(--ink);
   }
+  .file-row{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:12px}
+  .form-col .file-picker{
+    position:relative;display:inline-block;margin:0;padding:8px 16px;
+    border:1px solid var(--ink);color:var(--ink);font:inherit;font-size:13px;letter-spacing:0;
+  }
+  .file-picker::before{display:none!important}
+  .file-picker:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+  .file-picker input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+  .file-hint,.file-status,.brief-length{font-size:12px;color:var(--ink-2);line-height:1.6}
+  .file-status{overflow-wrap:anywhere}
+  .file-status:not(:empty){margin-bottom:8px}
+  .brief-length{margin-top:4px;text-align:right}
+  .file-status[data-error],.brief-length[data-error]{color:var(--accent)}
   .form-actions{
     display:flex;
     align-items:center;
@@ -351,14 +364,20 @@
   <div class="hero">
     <div class="kicker">Pre-Design Research · 案例研究</div>
     <h1>建筑案例研究 Agent</h1>
-    <p class="lede">粘贴一份建筑设计任务书。Agent 将<strong>解析关键词、检索案例、提取图片、归纳设计策略</strong>，生成 11 页前期研究汇报。任务书会发送给部署方配置的 AI 平台。持有报告链接的人可以查看内容，请使用可外发的项目资料。</p>
+    <p class="lede">上传或粘贴一份建筑设计任务书。Agent 将<strong>解析关键词、检索案例、提取图片、归纳设计策略</strong>，生成 11 页前期研究汇报。点击生成后，正文会发送给部署方配置的 AI 平台。持有报告链接的人可以查看内容，请使用可外发的项目资料。</p>
   </div>
 
   <div class="form-grid">
     <div class="form-col">
       <form id="form">
         <label for="brief">Design Brief · 设计任务书</label>
+        <div class="file-row">
+          <label class="file-picker">上传任务书<input type="file" id="brief-file" accept=".docx,.pdf,.txt,.md" aria-describedby="file-hint"></label>
+          <span class="file-hint" id="file-hint">DOCX、文字版 PDF、TXT、MD · 最大 10 MB</span>
+        </div>
+        <p id="file-status" class="file-status" role="status" aria-live="polite"></p>
         <textarea name="brief" id="brief" maxlength="16000" placeholder="例：&#10;&#10;项目位置：浙江省丽水市松阳县…&#10;用地性质：原废弃村小学改造 + 新建扩建&#10;总建筑面积：约 1500 ㎡&#10;功能构成：阅览 / 展陈 / 多功能厅 / 艺术家驻留&#10;场地特征：山脊崖居古村，海拔 850m，面东向梯田&#10;材料策略：本地石、木、夯土&#10;关键词：乡村振兴 / 在地材料 / 公共性 / 山地地形" required></textarea>
+        <p id="brief-length" class="brief-length"></p>
         <div class="form-actions">
           <button type="submit" id="submit-btn">生成 Deck</button>
           <button type="button" class="btn-secondary" id="sample-btn">加载示例</button>
@@ -457,9 +476,55 @@ const previewIframe = document.getElementById('preview');
 const statsEl = document.getElementById('stats');
 const elapsedEl = document.getElementById('elapsed');
 const historyList = document.getElementById('history-list');
+const fileInput = document.getElementById('brief-file');
+const fileStatus = document.getElementById('file-status');
+const briefLength = document.getElementById('brief-length');
+let importing = false;
+let generating = false;
+
+function updateForm() {
+  const count = briefInput.value.trim().length;
+  const max = briefInput.maxLength;
+  const overLimit = count > max;
+  briefLength.textContent = overLimit
+    ? `正文共 ${count.toLocaleString()} 字，请精简到 ${max.toLocaleString()} 字后生成。`
+    : `${count.toLocaleString()} / ${max.toLocaleString()} 字`;
+  briefLength.toggleAttribute('data-error', overLimit);
+  briefInput.setCustomValidity(overLimit ? briefLength.textContent : '');
+  briefInput.readOnly = importing || generating;
+  fileInput.disabled = sampleBtn.disabled = importing || generating;
+  submitBtn.disabled = importing || generating || overLimit;
+}
+briefInput.setAttribute('aria-describedby', 'brief-length');
+briefInput.addEventListener('input', updateForm);
+updateForm();
+
+fileInput.addEventListener('change', async () => {
+  const file = fileInput.files[0];
+  if (!file) return;
+  importing = true;
+  fileStatus.removeAttribute('data-error');
+  fileStatus.textContent = '正在读取 ' + file.name + '…';
+  updateForm();
+  try {
+    const { readBrief } = await import('./read-brief.js');
+    const { text, warning } = await readBrief(file);
+    briefInput.value = text;
+    fileStatus.textContent = `已导入 ${file.name}。请核对或编辑下方正文。${warning}`;
+  } catch (error) {
+    fileStatus.setAttribute('data-error', '');
+    fileStatus.textContent = error.message;
+  } finally {
+    importing = false;
+    fileInput.value = '';
+    updateForm();
+  }
+});
 
 sampleBtn.addEventListener('click', () => {
   briefInput.value = SAMPLE_BRIEF;
+  fileStatus.textContent = '';
+  updateForm();
   briefInput.focus();
 });
 
@@ -477,10 +542,11 @@ function stopElapsed(){ if(elapsedTimer) { clearInterval(elapsedTimer); elapsedT
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
   const brief = briefInput.value.trim();
-  if(!brief) return;
+  if(!brief || importing || generating || brief.length > briefInput.maxLength) return;
 
   // Reset UI
-  submitBtn.disabled = true;
+  generating = true;
+  updateForm();
   resultEl.classList.remove('show');
   statusEl.classList.add('show');
   document.querySelectorAll('.status-line').forEach(el => el.classList.remove('active','done'));
@@ -533,7 +599,8 @@ form.addEventListener('submit', async (e) => {
     stopElapsed();
     showError({ error: e.message });
   } finally {
-    submitBtn.disabled = false;
+    generating = false;
+    updateForm();
   }
 });
 
